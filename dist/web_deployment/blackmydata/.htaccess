@@ -1,0 +1,50 @@
+DirectoryIndex index.php index.html
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^index\.php$ - [L]
+    RewriteRule ^(index\.html)?$ index.php [L]
+    RewriteRule ^icon\.svg$ index.php?asset=icon.svg [L,QSA]
+</IfModule>
+
+# ==============================================================================
+# Apache Configuration for BlackMyData Web-App, Tesseract OCR & Downloads
+# ==============================================================================
+
+# 1. Correct MIME-Types for WebAssembly, Tesseract OCR, Scripts & Installers
+<IfModule mod_mime.c>
+    AddType application/octet-stream .traineddata
+    AddType application/gzip .gz
+    AddType application/wasm .wasm
+    AddType application/x-apple-diskimage .dmg
+    AddType application/vnd.android.package-archive .apk
+    AddType application/x-msdownload .exe
+    AddType application/zip .zip
+    AddType text/javascript .js .mjs
+    AddType text/css .css
+    AddType image/svg+xml .svg
+    AddType application/json .json
+</IfModule>
+
+# 2. CORS Headers & Cache Control
+<IfModule mod_headers.c>
+    # Basic protection for the landing page (code review B14); the web app in run/ has its own CSP.
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    <FilesMatch "\.(html|js)$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires 0
+    </FilesMatch>
+    <FilesMatch "\.(traineddata|wasm|gz|js|css|json|svg|png|jpg|jpeg|webp|pdf)$">
+        Header set Access-Control-Allow-Origin "*"
+        Header set Access-Control-Allow-Methods "GET, HEAD, OPTIONS"
+        Header set Access-Control-Allow-Headers "*"
+    </FilesMatch>
+</IfModule>
+
+# 3. Disable mod_deflate gzip compression for already compressed or binary models
+<IfModule mod_deflate.c>
+    SetEnvIfNoCase Request_URI \.(?:traineddata|wasm|gz)$ no-gzip dont-vary
+    SetEnvIfNoCase Request_URI tesseract-core.*\.wasm\.js$ no-gzip dont-vary
+</IfModule>

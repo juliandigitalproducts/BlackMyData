@@ -1,0 +1,21 @@
+{
+  "name": "blackmydata",
+  "private": true,
+  "description": "BlackMyData – Schwärzung von PDFs im Browser. Tests der Web-Engine (code review B34).",
+  "scripts": {
+    "sync": "tools/sync_web.sh",
+    "test": "node tests/test_ocr_pii.js && node tests/test_sync.js && node tests/test_detection_core.js && node tests/test_ocr_stability.js && node tests/test_ocr_performance_ux.js && node tests/test_precise_ocr.js && node tests/test_export_and_ui.js && node tests/test_rules_and_export_safety.js && node tests/test_form_fields_and_file_input.js && node tests/test_emulator_fixes.js",
+    "test:harness": "node tests/harness/run_harness.js",
+    "test:e2e": "node tests/e2e/e2e_ui.js",
+    "test:browser": "npm run test:harness && npm run test:e2e",
+    "build:mac": "macos/build-app.sh",
+    "build:win": "windows/build.sh",
+    "build:linux": "linux/build.sh"
+  },
+  "dependencies": {
+    "pdf-lib": "^1.17.1"
+  },
+  "devDependencies": {
+    "playwright-core": "1.65.1"
+  }
+}

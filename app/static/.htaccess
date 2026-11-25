@@ -1,0 +1,61 @@
+# Bot protection (AIO gate, /gate/, source: REPOS/aio-gate): index.php delivers the app – index.html and every
+# other file – only with a valid, signed pass from the check page (rate limit + CAPTCHA).
+# No <IfModule>: without mod_rewrite the server answers 500 instead of serving the app unprotected.
+DirectoryIndex index.php
+RewriteEngine On
+RewriteRule ^index\.php$ - [L]
+RewriteRule ^(index\.html)?$ index.php [L]
+RewriteRule ^(icon\.svg|favicon\.ico)$ - [L]
+RewriteRule ^(.+)$ index.php?asset=$1 [L,QSA,B]
+
+# ==============================================================================
+# Apache Configuration for BlackMyData Web-App, Tesseract OCR & Downloads
+# ==============================================================================
+
+# 1. Correct MIME-Types for WebAssembly, Tesseract OCR, Scripts & Installers
+<IfModule mod_mime.c>
+    AddType application/octet-stream .traineddata
+    AddType application/gzip .gz
+    AddType application/wasm .wasm
+    AddType application/x-apple-diskimage .dmg
+    AddType application/vnd.android.package-archive .apk
+    AddType application/x-msdownload .exe
+    AddType application/zip .zip
+    AddType text/javascript .js .mjs
+    AddType text/css .css
+    AddType image/svg+xml .svg
+    AddType application/json .json
+</IfModule>
+
+# 2. Security headers (code review B14). The CSP was tested with the full pipeline (PDF, OCR with WASM workers,
+#    redacted export) in Chrome: no violations. 'unsafe-inline' is needed for the inline onclick handlers,
+#    'wasm-unsafe-eval' for Tesseract, connect-src http: for local AI servers (Ollama, LM Studio) in the LAN.
+<IfModule mod_headers.c>
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' http: https: blob: data:; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'self'"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "no-referrer"
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+
+    # 3. Cache control (B35): the app's own HTML/JS/CSS always fresh, libraries a week, language data and WASM
+    #    cores (their content never changes for a file name) a year.
+    <FilesMatch "\.(html|js|css)$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+    </FilesMatch>
+    <If "%{REQUEST_URI} =~ m#/vendor/#">
+        Header set Cache-Control "public, max-age=604800"
+    </If>
+    <If "%{REQUEST_URI} =~ m#/vendor/(tesseract-core.*\.wasm\.js|.*\.traineddata\.gz)$#">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </If>
+    <FilesMatch "\.(traineddata|wasm|gz|js|css|json|svg|png|jpg|jpeg|webp|pdf)$">
+        Header set Access-Control-Allow-Origin "*"
+        Header set Access-Control-Allow-Methods "GET, HEAD, OPTIONS"
+    </FilesMatch>
+</IfModule>
+
+# 4. Disable mod_deflate gzip compression for already compressed or binary models
+<IfModule mod_deflate.c>
+    SetEnvIfNoCase Request_URI \.(?:traineddata|wasm|gz)$ no-gzip dont-vary
+    SetEnvIfNoCase Request_URI tesseract-core.*\.wasm\.js$ no-gzip dont-vary
+</IfModule>

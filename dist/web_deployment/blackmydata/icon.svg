@@ -1,0 +1,172 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Squircle Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B1120"/>
+      <stop offset="50%" stop-color="#111C33"/>
+      <stop offset="100%" stop-color="#1E293B"/>
+    </linearGradient>
+
+    <!-- Rim Glow Gradient -->
+    <linearGradient id="rimGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.85"/>
+      <stop offset="50%" stop-color="#6366F1" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#0EA5E9" stop-opacity="0.75"/>
+    </linearGradient>
+
+    <!-- Ambient Radial Glow -->
+    <radialGradient id="ambientGlow" cx="50%" cy="42%" r="55%">
+      <stop offset="0%" stop-color="#0EA5E9" stop-opacity="0.28"/>
+      <stop offset="60%" stop-color="#6366F1" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#0B1120" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Document Paper Gradient -->
+    <linearGradient id="docGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="65%" stop-color="#F1F5F9"/>
+      <stop offset="100%" stop-color="#E2E8F0"/>
+    </linearGradient>
+
+    <!-- Document Fold Gradient -->
+    <linearGradient id="foldGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#CBD5E1"/>
+      <stop offset="100%" stop-color="#94A3B8"/>
+    </linearGradient>
+
+    <!-- Redaction Bar Gradient -->
+    <linearGradient id="redactGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#090D16"/>
+      <stop offset="100%" stop-color="#1E293B"/>
+    </linearGradient>
+
+    <!-- Active Laser Redaction Glow -->
+    <linearGradient id="laserBeam" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#22D3EE" stop-opacity="0"/>
+      <stop offset="20%" stop-color="#22D3EE" stop-opacity="0.95"/>
+      <stop offset="50%" stop-color="#E0F2FE" stop-opacity="1"/>
+      <stop offset="80%" stop-color="#38BDF8" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#0EA5E9" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Laser Vertical Wash -->
+    <linearGradient id="laserWash" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#22D3EE" stop-opacity="0.38"/>
+      <stop offset="100%" stop-color="#22D3EE" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Shield Outer Gradient -->
+    <linearGradient id="shieldOuter" x1="15%" y1="0%" x2="85%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="45%" stop-color="#0EA5E9"/>
+      <stop offset="100%" stop-color="#0369A1"/>
+    </linearGradient>
+
+    <!-- Shield Inner Face Gradient -->
+    <linearGradient id="shieldInner" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A"/>
+      <stop offset="55%" stop-color="#0C2442"/>
+      <stop offset="100%" stop-color="#075985"/>
+    </linearGradient>
+
+    <!-- Shield Highlight Bevel -->
+    <linearGradient id="shieldRim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E0F2FE" stop-opacity="0.9"/>
+      <stop offset="50%" stop-color="#38BDF8" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#0284C7" stop-opacity="0.8"/>
+    </linearGradient>
+
+    <!-- Drop Shadows -->
+    <filter id="docShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#020617" flood-opacity="0.65"/>
+    </filter>
+    <filter id="shieldShadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="14" stdDeviation="14" flood-color="#020617" flood-opacity="0.72"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="10" flood-color="#0EA5E9" flood-opacity="0.35"/>
+    </filter>
+    <filter id="laserGlow" x="-30%" y="-200%" width="160%" height="500%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- macOS Squircle Base -->
+  <rect x="20" y="20" width="472" height="472" rx="108" ry="108" fill="url(#bgGrad)"/>
+  <rect x="20" y="20" width="472" height="472" rx="108" ry="108" fill="url(#ambientGlow)"/>
+
+  <!-- Subtle Top Glass Highlight -->
+  <path d="M 128 22 L 384 22 C 443 22 490 69 490 128 L 490 165 C 400 115 112 115 22 165 L 22 128 C 22 69 69 22 128 22 Z" fill="#FFFFFF" opacity="0.035"/>
+
+  <!-- Metallic Squircle Border -->
+  <rect x="21.5" y="21.5" width="469" height="469" rx="106.5" ry="106.5" fill="none" stroke="url(#rimGrad)" stroke-width="3"/>
+
+  <!-- Tilted PDF Document Group -->
+  <g transform="rotate(-4 236 244)" filter="url(#docShadow)">
+    <!-- Document Sheet with Folded Top-Right Corner -->
+    <path d="M 110 86 L 298 86 L 358 146 L 358 394 C 358 408.36 346.36 420 332 420 L 110 420 C 95.64 420 84 408.36 84 394 L 84 112 C 84 97.64 95.64 86 110 86 Z" fill="url(#docGrad)"/>
+
+    <!-- Top-Left PDF Badge Header -->
+    <rect x="112" y="114" width="64" height="24" rx="6" fill="#0EA5E9"/>
+    <text x="144" y="131" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif" font-size="13" font-weight="800" fill="#FFFFFF" letter-spacing="1">PDF</text>
+    <rect x="188" y="120" width="84" height="12" rx="6" fill="#CBD5E1"/>
+
+    <!-- Document Lines & Redaction Bars -->
+    <!-- Row 1: Redacted Name / ID -->
+    <rect x="112" y="160" width="142" height="22" rx="5" fill="url(#redactGrad)"/>
+    <rect x="264" y="165" width="64" height="12" rx="6" fill="#CBD5E1"/>
+
+    <!-- Row 2: Text + Redacted Bar -->
+    <rect x="112" y="196" width="70" height="12" rx="6" fill="#94A3B8"/>
+    <rect x="192" y="191" width="136" height="22" rx="5" fill="url(#redactGrad)"/>
+
+    <!-- Row 3: Actively Scanned / Redacted Bar with Cyan Laser -->
+    <rect x="112" y="229" width="194" height="26" rx="5" fill="#090D16" stroke="#22D3EE" stroke-width="1.5"/>
+    <!-- Cyan Security Redaction Blocks Inside -->
+    <rect x="120" y="236" width="28" height="12" rx="2" fill="#22D3EE" opacity="0.85"/>
+    <rect x="154" y="236" width="42" height="12" rx="2" fill="#38BDF8" opacity="0.65"/>
+    <rect x="202" y="236" width="34" height="12" rx="2" fill="#22D3EE" opacity="0.45"/>
+
+    <!-- Laser Wash Below Scan Line -->
+    <rect x="74" y="254" width="294" height="34" fill="url(#laserWash)"/>
+
+    <!-- Glowing Cyan Laser Scan Line -->
+    <rect x="68" y="251" width="308" height="6" rx="3" fill="url(#laserBeam)" filter="url(#laserGlow)"/>
+
+    <!-- Row 4: Subtle Unredacted & Redacted Lines -->
+    <rect x="112" y="274" width="116" height="22" rx="5" fill="url(#redactGrad)"/>
+    <rect x="238" y="279" width="90" height="12" rx="6" fill="#CBD5E1"/>
+
+    <!-- Row 5 -->
+    <rect x="112" y="314" width="88" height="12" rx="6" fill="#CBD5E1"/>
+    <rect x="210" y="309" width="118" height="22" rx="5" fill="url(#redactGrad)"/>
+
+    <!-- Row 6 -->
+    <rect x="112" y="346" width="160" height="22" rx="5" fill="url(#redactGrad)"/>
+
+    <!-- Folded Corner Flap -->
+    <path d="M 298 86 L 298 130 C 298 138.84 305.16 146 314 146 L 358 146 Z" fill="url(#foldGrad)"/>
+  </g>
+
+  <!-- 3D Privacy Shield Overlapping Bottom-Right -->
+  <g filter="url(#shieldShadow)">
+    <!-- Outer Shield Body -->
+    <path d="M 356 232 L 444 266 C 448 267.5 450 271 450 275.5 L 450 344 C 450 398 410 439 356 458 C 302 439 262 398 262 344 L 262 275.5 C 262 271 264 267.5 268 266 L 356 232 Z"
+          fill="url(#shieldOuter)" stroke="url(#shieldRim)" stroke-width="3"/>
+
+    <!-- Inner Shield Face -->
+    <path d="M 356 248 L 432 277 L 432 341 C 432 386 398 421 356 438 C 314 421 280 386 280 341 L 280 277 L 356 248 Z"
+          fill="url(#shieldInner)"/>
+
+    <!-- Left Half Glass Reflection on Shield -->
+    <path d="M 356 248 L 280 277 L 280 341 C 280 386 314 421 356 438 Z"
+          fill="#38BDF8" opacity="0.09"/>
+
+    <!-- Glowing Cyan Checkmark & Lock Emblem -->
+    <circle cx="356" cy="340" r="42" fill="#0EA5E9" opacity="0.16" stroke="#38BDF8" stroke-width="2" stroke-opacity="0.5"/>
+    <path d="M 336 341 L 350 355 L 379 325" fill="none" stroke="#22D3EE" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 336 341 L 350 355 L 379 325" fill="none" stroke="#E0F2FE" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

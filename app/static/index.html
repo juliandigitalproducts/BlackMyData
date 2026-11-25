@@ -1,0 +1,1531 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- N5: same policy as the web server's header, also for the Android/macOS shells that serve the files themselves.
+       connect-src http/https: the optional AI server the user configures (usually in the own network). -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' http: https: blob: data:; object-src 'none'; base-uri 'self'; form-action 'none'" />
+  <title>BlackMyData – DSGVO PDF-Schwärzung (100% im Browser &amp; Optionale Lokale KI)</title>
+  <link rel="icon" type="image/svg+xml" href="./icon.svg?v=1.0.7" />
+  <link rel="stylesheet" href="./style.css?v=1.0.7" />
+</head>
+<body>
+
+  <!-- App Header -->
+  <header class="app-header">
+    <a href="https://allinonemediamanager.de/blackmydata/" class="brand" style="text-decoration:none; color:inherit; cursor:pointer;" title="Zurück zur Website &amp; Downloads">
+      <div class="brand-icon">
+        <img src="./icon.svg" alt="BlackMyData Logo" class="brand-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+        <span class="brand-logo-fallback" style="display: none;">🛡️</span>
+      </div>
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+          <h1 class="brand-title">BlackMyData</h1>
+          <span class="privacy-pill" onclick="event.preventDefault(); event.stopPropagation(); switchTab('about');" title="100% im Browser &amp; Loopback 127.0.0.1 – Kein PDF wird jemals auf diesen Webserver hochgeladen!">🔒 100% Client-Side &amp; Lokal</span>
+        </div>
+        <p style="font-size: 0.75rem; color: var(--text-secondary);">DSGVO PDF-Schwärzung für Website-Nutzung • 100% im Browser + Optionale Lokale KI (Ollama, LM Studio, oMLX)</p>
+      </div>
+    </a>
+
+    <div class="header-badges">
+      <button class="btn btn-secondary btn-sm" onclick="openAiProviderModal()" title="Modus wählen: 100% Browser (Ohne KI), Ollama (11434), LM Studio (1234), oMLX (1060) oder anderer KI-Rechner">
+        🧠 Modus / KI-Provider wählen
+      </button>
+      <button class="btn btn-secondary btn-sm" onclick="openModelAdvisorModal()" title="Empfehlungen für 12 GB VRAM &amp; lokaler Hardware-Check mit Datenschutzhinweis">
+        💡 Welches KI-Modell soll ich nutzen?
+      </button>
+      <button class="btn btn-secondary btn-sm" onclick="openSetupWizard()" title="Interaktiven Einrichtungsassistenten öffnen">
+        🧭 Assistent
+      </button>
+      <div id="ocrStatusBadge" class="status-badge" style="cursor: pointer; user-select: none;" onclick="toggleOcrPrecision()" title="Klicken zum Umschalten zwischen Standard-OCR und Genau (300 DPI + Deskew)" role="button" tabindex="0">
+        <span class="badge-dot dot-green"></span> Engine: PDF.js + Kontexterkennung
+      </div>
+      <div id="ollamaStatusBadge" class="status-badge" style="cursor: pointer;" onclick="openAiProviderModal()" title="Klicken zum Auswählen des KI-Providers (Keine automatische Verbindung)">
+        <span class="badge-dot dot-green"></span> Modus: ⚡ 100% Browser (Ohne KI)
+      </div>
+      <button id="themeToggleBtn" class="btn btn-secondary btn-sm" title="Design wechseln (Hell / Dunkel)">
+        <span id="themeToggleIcon">☀️</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="nav-tabs">
+    <a href="https://allinonemediamanager.de/blackmydata/" class="tab-btn" style="text-decoration:none; color:#38bdf8; font-weight:600; display:inline-flex; align-items:center; gap:6px;" title="Zurück zur Website & Downloads">← Zurück zur Website &amp; Downloads</a>
+    <button class="tab-btn active" data-tab="batch">
+      📁 1. Dokumente &amp; Schnellkonfiguration
+    </button>
+    <button class="tab-btn" data-tab="editor">
+      🔍 2. Vorschau &amp; Detailprüfung
+    </button>
+    <button class="tab-btn" data-tab="settings">
+      ⚙️ 3. Erweiterte Einstellungen &amp; KI
+    </button>
+    <button class="tab-btn" data-tab="about">
+      🛡️ 4. Datenschutz, Architektur &amp; Lizenzen
+    </button>
+  </nav>
+
+  <!-- Main Container -->
+  <main class="main-container">
+
+    <!-- TAB 1: BATCH PROCESSING, SIMPLE MODE & GRANULAR SELECTOR -->
+    <section id="tab-batch" class="tab-content active">
+      <!-- Dropzone -->
+      <div class="glass-card">
+        <div id="dropzone" class="dropzone">
+          <div class="dropzone-icon">📥</div>
+          <div class="dropzone-text">PDF-Dateien oder Bilder hier ablegen oder klicken zum Auswählen</div>
+          <div class="dropzone-subtext">100% DSGVO-sicher im Browser-Arbeitsspeicher • PDFs &amp; Bilder (PNG, JPG, WEBP, BMP) • Export immer als PDF</div>
+          <input type="file" id="fileInput" multiple accept=".pdf,image/png,image/jpeg,image/webp,image/tiff,image/bmp,.png,.jpg,.jpeg,.webp,.tiff,.tif,.bmp" style="display: none;" />
+        </div>
+        <div style="margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.82rem; color: #94a3b8; text-align: center; flex-wrap: wrap;">
+          <span>🌐 <strong>Browser-Empfehlung:</strong> Für maximale OCR-Geschwindigkeit und hochauflösende Scans wird ein <strong>Chromium-Browser</strong> (Google Chrome, Microsoft Edge, Brave) empfohlen. Safari &amp; Firefox werden ebenfalls unterstützt.</span>
+        </div>
+      </div>
+
+      <!-- Document Queue Table -->
+      <div id="queueCard" class="glass-card" style="display: none;">
+        <div class="card-title">
+          <span>📋 Geladene PDF-Dokumente (im Browser-RAM)</span>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button class="btn btn-primary" onclick="batchRedactAll()">
+              ⬛ Alle Dokumente jetzt schwärzen
+            </button>
+            <button class="btn btn-outline" onclick="downloadAllAsZip()">
+              📦 Alle als ZIP herunterladen
+            </button>
+          </div>
+        </div>
+
+        <table class="doc-table">
+          <thead>
+            <tr>
+              <th>Dateiname</th>
+              <th>Größe</th>
+              <th>Seiten</th>
+              <th>Status</th>
+              <th>Aktionen</th>
+            </tr>
+          </thead>
+          <tbody id="docTableBody"></tbody>
+        </table>
+      </div>
+
+      <!-- Simple Mode & Quick Configuration Panel -->
+      <div class="glass-card">
+        <div class="card-title">
+          <div>
+            <span>🎛️ Einfacher Modus &amp; Schnellkonfiguration</span>
+            <p style="font-size: 0.8rem; font-weight: normal; color: var(--text-secondary); margin-top: 0.15rem;">
+              Wähle Erkennungs-Qualität, Schwärzungsstärke, Datenkategorien und deinen gewünschten Export-Dateinamen
+            </p>
+          </div>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button class="btn btn-secondary btn-sm" onclick="openModelAdvisorModal()">
+              💡 Welches KI-Modell soll ich nutzen?
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="openSetupWizard()">
+              🧭 Schritt-für-Schritt Assistent
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 1: Recognition Mode -->
+        <div class="config-section">
+          <div class="config-section-header">
+            <span class="step-badge">1</span>
+            <strong>Erkennungs-Qualität &amp; KI-Modus wählen</strong>
+          </div>
+          <div class="mode-cards-grid">
+            <div class="mode-card" data-recognition-mode="fast" onclick="setRecognitionMode('fast')">
+              <div class="mode-card-header">
+                <span class="mode-icon">⚡</span>
+                <div>
+                  <div class="mode-title">Schnelle Browser-Erkennung</div>
+                  <div class="mode-subtitle">100% im Browser ohne Localhost-Server (~0.1 Sek./Seite)</div>
+                </div>
+              </div>
+              <p class="mode-desc">
+                Läuft auf jedem Gerät sofort im Browser (PC, Mac, iPad, Smartphone). Erkennt Vor-/Nachnamen, Polyseme im Kontext (Rose, Winter, Schwarz, Wolf), Adressen, IBANs, Steuer-IDs, Telefon &amp; E-Mail.
+              </p>
+            </div>
+
+            <div class="mode-card active" data-recognition-mode="good" onclick="setRecognitionMode('good')">
+              <div class="mode-card-badge">Empfohlen</div>
+              <div class="mode-card-header">
+                <span class="mode-icon">🧠</span>
+                <div>
+                  <div class="mode-title">Gute Erkennung (Kontext + Optionale Lokale KI)</div>
+                  <div class="mode-subtitle">Deutsche Fließtext-Analyse + Optional Ollama (11434), LM Studio (1234), oMLX (1060) oder LAN-Server</div>
+                </div>
+              </div>
+              <p class="mode-desc">
+                Maximale Präzision inkl. seitenübergreifender Namens-Fortpflanzung. Verbindet sich auf Wunsch direkt vom Browser mit deinem lokalen Ollama, LM Studio, oMLX oder einem anderen KI-Rechner im Netzwerk.
+              </p>
+            </div>
+
+            <div class="mode-card" data-recognition-mode="precise" onclick="setRecognitionMode('precise')">
+              <div class="mode-card-badge" style="background: var(--accent);">🎯 Maximal</div>
+              <div class="mode-card-header">
+                <span class="mode-icon">🎯</span>
+                <div>
+                  <div class="mode-title">Genaue OCR &amp; Vision-KI</div>
+                  <div class="mode-subtitle">300 DPI, Sauvola-Binarisierung, Schräglagen-Korrektur, Best-Modelle &amp; Vision-KI</div>
+                </div>
+              </div>
+              <p class="mode-desc">
+                Höchste Erkennungsrate für schwierige Fotos, schräge Handy-Scans &amp; unleserliche Dokumente. Mehrfache Bildoptimierung, Deskew-Ausrichtung und optionale visuelle KI-Prüfung.
+              </p>
+            </div>
+          </div>
+
+          <!-- Step 1b: Sensitivity Mode (Empfindlichkeit) -->
+          <div style="margin-top: 1rem; padding: 0.95rem 1rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem;">
+              <strong style="font-size: 0.9rem;">🎯 Erkennungs-Empfindlichkeit (5 Stufen):</strong>
+              <span id="sensitivityActiveBadge" class="status-badge" style="font-size: 0.75rem;">Stufe 3: Standard</span>
+            </div>
+            <div class="strength-selector" style="margin-bottom: 0.5rem;">
+              <button type="button" class="strength-btn" data-sensitivity="minimal" onclick="setSensitivity('minimal')">
+                <span class="strength-icon">🟢</span><span class="strength-name">1: Minimal</span>
+              </button>
+              <button type="button" class="strength-btn" data-sensitivity="low" onclick="setSensitivity('low')">
+                <span class="strength-icon">🟢</span><span class="strength-name">2: Niedrig (Präzise)</span>
+              </button>
+              <button type="button" class="strength-btn active" data-sensitivity="balanced" onclick="setSensitivity('balanced')">
+                <span class="strength-icon">🟡</span><span class="strength-name">3: Standard</span>
+              </button>
+              <button type="button" class="strength-btn" data-sensitivity="high" onclick="setSensitivity('high')">
+                <span class="strength-icon">🟠</span><span class="strength-name">4: Hoch (Sensitiv)</span>
+              </button>
+              <button type="button" class="strength-btn" data-sensitivity="maximum" onclick="setSensitivity('maximum')">
+                <span class="strength-icon">🔴</span><span class="strength-name">5: Maximal</span>
+              </button>
+            </div>
+            <p id="sensitivityHelpText" style="font-size: 0.8rem; color: var(--text-secondary); margin: 0;">
+              <strong>💡 Schutz für Rechnungen &amp; Bestellungen:</strong> Auf Stufe 1 &amp; 2 werden Rechnungsnummern (#...), Artikel-SKUs und Produktcodes zuverlässig ignoriert und nicht fälschlich als Ausweis oder ID eingestuft.
+            </p>
+          </div>
+
+          <!-- Explicit AI Provider Bar -->
+          <div style="margin-top: 1rem; padding: 0.95rem 1rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.7rem;">
+              <div>
+                <strong style="font-size: 0.9rem;">🧠 Gewählter Ausführungs- &amp; KI-Modus:</strong>
+                <span style="font-size: 0.78rem; color: var(--text-secondary); margin-left: 0.35rem;">
+                  Keine automatische Verbindung – 100% im Browser oder optional mit lokalem/eigenem KI-Server.
+                </span>
+              </div>
+              <div style="display: flex; gap: 0.45rem; flex-wrap: wrap;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="runAutodiscoverOnly(true)" title="Scannt lokal 127.0.0.1 nach Ollama (11434), LM Studio (1234) und oMLX (1060), ohne die Auswahl zu ändern">
+                  🔍 Autodiscovery (127.0.0.1 scannen)
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="openModelAdvisorModal()">
+                  💡 Welches KI-Modell soll ich nutzen?
+                </button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="openAiProviderModal()">
+                  ⚙️ Provider-Dialog &amp; Verbindungs-Hilfe
+                </button>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(185px, 1fr)); gap: 0.6rem; align-items: stretch;">
+              <button type="button" class="strength-btn active" data-ai-provider-btn="none" onclick="selectAiProvider('none')">
+                <span class="strength-icon">⚡</span>
+                <span class="strength-name">Ohne KI (100% Browser)</span>
+                <span class="strength-meta">Sofort im Browser bereit</span>
+              </button>
+              <button type="button" class="strength-btn" data-ai-provider-btn="ollama" onclick="selectAiProvider('ollama')">
+                <span class="strength-icon">🦙</span>
+                <span class="strength-name">Lokales Ollama (11434)</span>
+                <span class="strength-meta" id="quickOllamaDetectedMeta">Lokal 127.0.0.1:11434</span>
+              </button>
+              <button type="button" class="strength-btn" data-ai-provider-btn="lmstudio" onclick="selectAiProvider('lmstudio')">
+                <span class="strength-icon">🎸</span>
+                <span class="strength-name">LM Studio (Port 1234)</span>
+                <span class="strength-meta" id="quickLmstudioDetectedMeta">Lokal 127.0.0.1:1234</span>
+              </button>
+              <button type="button" class="strength-btn" data-ai-provider-btn="omlx" onclick="selectAiProvider('omlx')">
+                <span class="strength-icon">🍏</span>
+                <span class="strength-name">Lokales oMLX (1060)</span>
+                <span class="strength-meta" id="quickOmlxDetectedMeta">Lokal 127.0.0.1:1060</span>
+              </button>
+              <button type="button" class="strength-btn" data-ai-provider-btn="remote" onclick="selectAiProvider('remote')">
+                <span class="strength-icon">🌐</span>
+                <span class="strength-name">Mein KI-Server ist ein anderer Rechner</span>
+                <span class="strength-meta" id="quickRemoteDetectedMeta">Manuelle Server-URL eingeben</span>
+              </button>
+            </div>
+
+            <!-- Remote AI Server Configuration Panel (Tab 1) -->
+            <div id="quickRemoteServerPanel" style="display: none; margin-top: 0.8rem; padding: 0.85rem; background: var(--bg-primary); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: var(--radius-sm);">
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.55rem;">
+                <strong style="font-size: 0.85rem; color: var(--accent-light);">🌐 Externer / Netzwerk KI-Server (Anderer Rechner im LAN oder eigener Endpoint)</strong>
+                <span id="quickRemoteStatusBadge" class="status-badge"><span class="badge-dot dot-yellow"></span> URL eingeben &amp; prüfen</span>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0.6rem; align-items: end;">
+                <div>
+                  <label style="font-size: 0.76rem; color: var(--text-secondary); display: block; margin-bottom: 0.2rem;">Server-URL (inkl. Port)</label>
+                  <input type="text" id="quickRemoteUrlInput" class="form-control" placeholder="z.B. http://192.168.1.100:11434 oder :1234" value="" oninput="syncRemoteInputs('quick')" />
+                </div>
+                <div>
+                  <label style="font-size: 0.76rem; color: var(--text-secondary); display: block; margin-bottom: 0.2rem;">API-Protokoll</label>
+                  <select id="quickRemoteApiTypeSelect" class="form-control" onchange="syncRemoteInputs('quick')">
+                    <option value="openai">OpenAI-kompatibel (LM Studio / oMLX / vLLM / LocalAI)</option>
+                    <option value="ollama">Ollama API (/api/tags &amp; /api/generate)</option>
+                  </select>
+                </div>
+                <div>
+                  <label style="font-size: 0.76rem; color: var(--text-secondary); display: block; margin-bottom: 0.2rem;">API-Key (optional)</label>
+                  <input type="password" id="quickRemoteApiKeyInput" class="form-control" placeholder="Optionaler Bearer Key" oninput="syncRemoteInputs('quick')" />
+                </div>
+                <div>
+                  <button type="button" class="btn btn-primary" style="width: 100%;" onclick="probeRemoteAiServer(true)">
+                    🔍 Server prüfen &amp; Modelle erkennen
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Selected AI Model Row -->
+            <div id="quickAiModelRow" style="display: none; margin-top: 0.75rem; padding-top: 0.65rem; border-top: 1px solid var(--border-color); align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+              <label for="quickAiModelSelect" style="font-size: 0.82rem; font-weight: 600; white-space: nowrap;">Modell des gewählten Providers:</label>
+              <select id="quickAiModelSelect" class="form-control" style="max-width: 380px; padding: 0.35rem 0.6rem; font-size: 0.84rem;" onchange="onProviderModelChange(this.value)">
+                <option value="">Bitte Modell wählen oder Autodiscovery starten...</option>
+              </select>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="openModelAdvisorModal()">
+                💡 Welches KI-Modell soll ich nutzen?
+              </button>
+            </div>
+
+            <!-- Direct Download Box when no local AI is detected -->
+            <div id="quickAiDownloadBox" style="margin-top: 0.75rem; padding: 0.7rem 0.9rem; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.28); border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.65rem;">
+              <div style="font-size: 0.8rem; color: var(--text-secondary);">
+                📥 <strong style="color: var(--text-primary);">Noch keine lokale KI installiert?</strong> Lade kostenlos einen lokalen KI-Server herunter oder prüfe das passende Modell für deine Hardware:
+              </div>
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <a href="https://ollama.com/download" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">
+                  🦙 Ollama direkt herunterladen
+                </a>
+                <a href="https://lmstudio.ai/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">
+                  🎸 LM Studio herunterladen
+                </a>
+                <button type="button" class="btn btn-outline btn-sm" onclick="openModelAdvisorModal()">
+                  💡 Welches KI-Modell soll ich nutzen?
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Redaction Strength (4 levels) -->
+        <div class="config-section">
+          <div class="config-section-header">
+            <span class="step-badge">2</span>
+            <strong>Wie stark soll geschwärzt werden? (Schwärzungsstärke)</strong>
+          </div>
+          <div class="strength-selector" id="batchStrengthSelector">
+            <button type="button" class="strength-btn" data-strength="light" onclick="setRedactionStrength('light')">
+              <span class="strength-icon">🔉</span>
+              <span class="strength-name">Leicht</span>
+              <span class="strength-meta">Kerndaten • 0px Rand</span>
+            </button>
+            <button type="button" class="strength-btn active" data-strength="standard" onclick="setRedactionStrength('standard')">
+              <span class="strength-icon">⚖️</span>
+              <span class="strength-name">Standard</span>
+              <span class="strength-meta">DSGVO-Konform • 2px Puffer</span>
+            </button>
+            <button type="button" class="strength-btn" data-strength="strict" onclick="setRedactionStrength('strict')">
+              <span class="strength-icon">🔒</span>
+              <span class="strength-name">Streng</span>
+              <span class="strength-meta">Inkl. Firmen &amp; Daten • 4px Puffer</span>
+            </button>
+            <button type="button" class="strength-btn" data-strength="maximum" onclick="setRedactionStrength('maximum')">
+              <span class="strength-icon">🛡️</span>
+              <span class="strength-name">Maximal</span>
+              <span class="strength-meta">Komplettschutz • 5px Puffer</span>
+            </button>
+          </div>
+          <div id="strengthDescriptionBox" class="strength-info-banner">
+            <strong>⚖️ Standard (DSGVO-Empfehlung):</strong> Schwärzt alle personenbezogenen Daten (Namen, Adressen, Kontaktdaten, Bank- &amp; Steuerdaten, Geburtsdaten) mit 2 Pixeln Sicherheitsrand gegen überstehende Buchstaben.
+          </div>
+        </div>
+
+        <!-- Step 3: Categories (Coarse vs. Granular) -->
+        <div class="config-section">
+          <div class="config-section-header" style="justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+              <span class="step-badge">3</span>
+              <strong>Was soll geschwärzt werden? (Datenkategorien)</strong>
+            </div>
+
+            <div class="segmented-control">
+              <button type="button" class="seg-btn active" data-granularity="coarse" onclick="setCategoryGranularity('coarse')">
+                📦 Grobe Kategorien (Einfach)
+              </button>
+              <button type="button" class="seg-btn" data-granularity="granular" onclick="setCategoryGranularity('granular')">
+                🔬 Granulare Kategorien (Fein)
+              </button>
+            </div>
+          </div>
+
+          <!-- COARSE CATEGORIES VIEW -->
+          <div id="coarseCategoriesPanel" class="categories-panel">
+            <div class="coarse-pills-grid">
+              <label class="cat-pill">
+                <input type="checkbox" data-cat-coarse="names" checked onchange="onCoarseCategoryChange('names', this.checked)" />
+                <span class="cat-pill-content">👤 Namen &amp; Personen</span>
+              </label>
+              <label class="cat-pill">
+                <input type="checkbox" data-cat-coarse="addresses" checked onchange="onCoarseCategoryChange('addresses', this.checked)" />
+                <span class="cat-pill-content">🏠 Adressen &amp; Wohnorte</span>
+              </label>
+              <label class="cat-pill">
+                <input type="checkbox" data-cat-coarse="emails" checked onchange="onCoarseCategoryChange('emails', this.checked)" />
+                <span class="cat-pill-content">✉️ E-Mail-Adressen</span>
+              </label>
+              <label class="cat-pill">
+                <input type="checkbox" data-cat-coarse="phones" checked onchange="onCoarseCategoryChange('phones', this.checked)" />
+                <span class="cat-pill-content">📞 Telefonnummern</span>
+              </label>
+              <label class="cat-pill">
+                <input type="checkbox" data-cat-coarse="ibans" checked onchange="onCoarseCategoryChange('ibans', this.checked)" />
+                <span class="cat-pill-content">💳 Bankdaten (IBAN/BIC)</span>
+              </label>
+              <label class="cat-pill">
+                <input type="checkbox" data-cat-coarse="tax_ids" checked onchange="onCoarseCategoryChange('tax_ids', this.checked)" />
+                <span class="cat-pill-content">🪪 Ausweis &amp; Steuer-IDs</span>
+              </label>
+              <label class="cat-pill">
+                <input type="checkbox" data-cat-coarse="dates" checked onchange="onCoarseCategoryChange('dates', this.checked)" />
+                <span class="cat-pill-content">📅 Datumsangaben</span>
+              </label>
+              <label class="cat-pill">
+                <input type="checkbox" data-cat-coarse="organizations" onchange="onCoarseCategoryChange('organizations', this.checked)" />
+                <span class="cat-pill-content">🏢 Firmen &amp; Organisationen</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- GRANULAR (FINE) CATEGORIES VIEW -->
+          <div id="fineCategoriesPanel" class="categories-panel" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+              <span style="font-size: 0.8rem; color: var(--text-secondary);">
+                🔬 <strong>Fein-Steuerung aktiv:</strong> Wähle exakt aus, welche Einzelbestandteile geschwärzt oder sichtbar gelassen werden sollen (z.B. nur Nachname schwärzen, aber Stadt sichtbar lassen).
+              </span>
+              <div style="display: flex; gap: 0.4rem;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="toggleAllGranularCategories(true)">Alle an</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="toggleAllGranularCategories(false)">Alle aus</button>
+              </div>
+            </div>
+
+            <div class="granular-groups-grid">
+              <div class="granular-group-card">
+                <div class="granular-group-title">👤 Personen &amp; Namen</div>
+                <label class="checkbox-label">
+                  <input type="checkbox" data-cat-fine="first_names" checked onchange="onFineCategoryChange('first_names', this.checked)" />
+                  <span>Vorname (z.B. Max, Anna)</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" data-cat-fine="last_names" checked onchange="onFineCategoryChange('last_names', this.checked)" />
+                  <span>Nachname / Familienname</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" data-cat-fine="titles" checked onchange="onFineCategoryChange('titles', this.checked)" />
+                  <span>Titel &amp; Anrede (Herr, Frau, Dr., Prof.)</span>
+                </label>
+              </div>
+
+              <div class="granular-group-card">
+                <div class="granular-group-title">🏠 Adresse &amp; Standort</div>
+                <label class="checkbox-label">
+                  <input type="checkbox" data-cat-fine="streets" checked onchange="onFineCategoryChange('streets', this.checked)" />
+                  <span>Straße (z.B. Hauptstraße)</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" data-cat-fine="house_numbers" checked onchange="onFineCategoryChange('house_numbers', this.checked)" />
+                  <span>Hausnummer (z.B. 12a)</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" data-cat-fine="zip_codes" checked onchange="onFineCategoryChange('zip_codes', this.checked)" />
+                  <span>Postleitzahl / PLZ (5-stellig)</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" data-cat-fine="cities" checked onchange="onFineCategoryChange('cities', this.checked)" />
+                  <span>Stadt / Wohnort (z.B. München)</span>
+                </label>
+              </div>
+
+              <div class="granular-group-card">
+                <div class="granular-group-title">📞 Kommunikation &amp; Kontakt</div>
+                <label class="checkbox-label">
+                  <input type="checkbox" data-cat-fine="emails" checked onchange="onFineCategoryChange('emails', this.checked)" />
+                  <span>E-Mail-Adresse</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" data-cat-fine="phones" checked onchange="onFineCategoryChange('phones', this.checked)" />
+                  <span>Telefon / Mobilfunk / Fax</span>
+                </label>
+              </div>
+
+              <div class="granular-group-card">
+                <div class="granular-group-title">💳 Bank &amp; Finanzen</div>
+                <label class="checkbox-label">
+                  <input type="checkbox" data-cat-fine="ibans" checked onchange="onFineCategoryChange('ibans', this.checked)" />
+                  <span>IBAN / Kontonummer</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" data-cat-fine="bics" checked onchange="onFineCategoryChange('bics', this.checked)" />
+                  <span>BIC / SWIFT-Code</span>
+                </label>
+              </div>
+
+              <div class="granular-group-card">
+                <div class="granular-group-title">🪪 IDs &amp; Behördennummern</div>
+                <label class="checkbox-label">
+                  <input type="checkbox" data-cat-fine="tax_ids" checked onchange="onFineCategoryChange('tax_ids', this.checked)" />
+                  <span>Steuer-ID / Steuernummer / USt-IdNr.</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" data-cat-fine="social_security_ids" checked onchange="onFineCategoryChange('social_security_ids', this.checked)" />
+                  <span>Sozialversicherungs- / Krankenkassen-Nr.</span>
+                </label>
+              </div>
+
+              <div class="granular-group-card">
+                <div class="granular-group-title">📅 Datum &amp; Organisationen</div>
+                <label class="checkbox-label">
+                  <input type="checkbox" data-cat-fine="birth_dates" checked onchange="onFineCategoryChange('birth_dates', this.checked)" />
+                  <span>Geburtsdatum</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" data-cat-fine="general_dates" checked onchange="onFineCategoryChange('general_dates', this.checked)" />
+                  <span>Allgemeines Datum (Brief-/Vertragsdatum)</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" data-cat-fine="organizations" onchange="onFineCategoryChange('organizations', this.checked)" />
+                  <span>Firmen, Banken &amp; Organisationen</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4: Output Filename Customization -->
+        <div class="config-section" style="margin-bottom: 0;">
+          <div class="config-section-header" style="justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+              <span class="step-badge">4</span>
+              <strong>📄 Dateiname beim Export (mit oder ohne „_geschwaerzt.pdf“ oder frei wählbar)</strong>
+            </div>
+            <span id="quickFilenamePreview" class="status-badge" style="cursor: default;">
+              Vorschau: <strong>Dokument_geschwaerzt.pdf</strong>
+            </span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.65rem;">
+            <button type="button" class="strength-btn active" data-filename-mode-btn="suffix_default" onclick="setFilenameMode('suffix_default')">
+              <span class="strength-icon">🏷️</span>
+              <span class="strength-name">Standard („_geschwaerzt.pdf“)</span>
+              <span class="strength-meta">z.B. Dokument_geschwaerzt.pdf</span>
+            </button>
+            <button type="button" class="strength-btn" data-filename-mode-btn="keep_original" onclick="setFilenameMode('keep_original')">
+              <span class="strength-icon">📄</span>
+              <span class="strength-name">Originalname behalten</span>
+              <span class="strength-meta">Ohne „_geschwaerzt“ (z.B. Dokument.pdf)</span>
+            </button>
+            <button type="button" class="strength-btn" data-filename-mode-btn="custom" onclick="setFilenameMode('custom')">
+              <span class="strength-icon">✏️</span>
+              <span class="strength-name">Frei wählen</span>
+              <span class="strength-meta">Eigenes Suffix oder eigener Dateiname</span>
+            </button>
+          </div>
+
+          <div id="quickCustomFilenameRow" style="display: none; margin-top: 0.75rem; padding: 0.75rem 0.9rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+            <label for="quickCustomFilenameInput" style="font-size: 0.82rem; font-weight: 600;">Eigener Dateiname oder Suffix:</label>
+            <input type="text" id="quickCustomFilenameInput" class="form-control" style="max-width: 340px;" value="{original}_anonymisiert" placeholder="z.B. _anonymisiert oder {original}_clean oder MeinName.pdf" oninput="onCustomFilenamePatternInput(this.value)" />
+            <span style="font-size: 0.76rem; color: var(--text-secondary);">
+              Tipp: Nutze <code>{original}</code> für den Originalnamen, beginne mit <code>_</code> für ein Suffix (z.B. <code>_zensiert</code>) oder gib einen kompletten Namen wie <code>Bewerbung_Neu.pdf</code> ein.
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Browser Download Info Card -->
+      <div class="glass-card">
+        <div class="card-title">
+          <span>💾 Direkter Browser-Download (100% DSGVO-konform)</span>
+          <span style="font-size: 0.8rem; color: var(--success);">🔒 Keine Server-Speicherung</span>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-secondary);">
+          Deine PDFs werden ausschließlich im Arbeitsspeicher deines Browsers verarbeitet und nach dem Schwärzen direkt als <code id="downloadCardExampleName">Dokument_geschwaerzt.pdf</code> (oder gesammelt als ZIP-Archiv) in deinen lokalen <strong>Downloads</strong>-Ordner heruntergeladen.
+          Fertig geschwärzte Dokumente in dieser Sitzung: <strong id="outputFilesCount" style="color: var(--text-primary);">0</strong>
+        </p>
+      </div>
+    </section>
+
+    <!-- TAB 2: INTERACTIVE EDITOR & PREVIEW -->
+    <section id="tab-editor" class="tab-content">
+      <div class="editor-layout">
+        <!-- Left: Page List / Thumbnails -->
+        <div class="editor-panel editor-sidebar-left">
+          <div class="card-title" style="margin-bottom: 0.4rem;">
+            <span>📄 Seiten</span>
+            <span id="sidebarPageCountBadge" class="status-badge" style="font-size: 0.7rem; padding: 0.15rem 0.5rem;">1 Seite</span>
+          </div>
+          <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.6rem; word-break: break-all;">
+            Dokument: <strong id="editorFileName" style="color: var(--text-primary);">-</strong>
+          </div>
+          <div id="pageThumbnailsList" class="page-thumbnails-list"></div>
+        </div>
+
+        <!-- Center: Interactive Canvas Viewer -->
+        <div class="editor-panel editor-center-panel" style="padding: 0.75rem;">
+          <div class="canvas-controls">
+            <div class="page-nav-group">
+              <button type="button" id="btnPrevPage" class="btn btn-secondary btn-sm page-nav-btn" onclick="changeEditorPage(-1)" title="Vorherige Seite (Pfeiltaste Links)" disabled>
+                ◀ Vorherige
+              </button>
+              <div id="editorPageTitle" class="editor-page-indicator">
+                Seite <span id="editorCurrentPage">1</span> von <span id="editorTotalPages">1</span>
+              </div>
+              <select id="editorPageSelect" class="form-control editor-page-select" onchange="loadPageInEditor(parseInt(this.value, 10))" title="Direkt zu einer Seite springen"></select>
+              <button type="button" id="btnNextPage" class="btn btn-secondary btn-sm page-nav-btn" onclick="changeEditorPage(1)" title="Nächste Seite (Pfeiltaste Rechts)" disabled>
+                Nächste ▶
+              </button>
+            </div>
+
+            <div class="manual-tools-group">
+              <span class="manual-draw-badge" title="Mit gedrückter linker Maustaste über beliebigen Bereich im PDF ziehen, um ihn manuell zu schwärzen">
+                ✏️ Manuell schwärzen aktiv (Ziehen mit Maus)
+              </span>
+              <button type="button" id="btnClearManualPage" class="btn btn-danger btn-sm" style="display: none;" onclick="clearManualRedactionsOnCurrentPage()">
+                🗑️ Manuelle Auswahl löschen (<span id="manualPageCountBadge">0</span>)
+              </button>
+              <button type="button" id="btnForceOcrPage" class="btn btn-warning btn-sm" onclick="forceOcrOnCurrentPage()" title="OCR-Texterkennung auf der aktuellen Seite erneut ausführen (z.B. bei Scans, Fotos oder Stempeln)">
+                🔍 Texterkennung (OCR) für diese Seite erzwingen / erneut ausführen
+              </button>
+            </div>
+
+            <div class="zoom-controls-group">
+              <button type="button" class="btn btn-secondary btn-sm zoom-btn" data-zoom="0.8" onclick="setEditorZoom(0.8)">80%</button>
+              <button type="button" class="btn btn-secondary btn-sm zoom-btn active" data-zoom="1" onclick="setEditorZoom(1.0)">100%</button>
+              <button type="button" class="btn btn-secondary btn-sm zoom-btn" data-zoom="1.25" onclick="setEditorZoom(1.25)">125%</button>
+              <button type="button" class="btn btn-secondary btn-sm zoom-btn" data-zoom="1.5" onclick="setEditorZoom(1.5)">150%</button>
+            </div>
+          </div>
+
+          <div class="editor-hint-bar">
+            <span>💡 <strong>Bedienung:</strong> Klicke auf eine farbige Markierung zum Ein-/Ausschalten • <strong>Manuelles Schwärzen:</strong> Ziehe mit der Maus ein Rechteck über beliebige Stellen • Klicke auf ein rotes manuelles Feld zum Löschen.</span>
+          </div>
+
+          <!-- OCR Status / Error Infobox Container -->
+          <div id="ocrStatusInfobox" class="ocr-status-infobox" style="display: none;">
+            <div id="ocrStatusInfoboxContent" class="ocr-status-infobox-content"></div>
+            <button type="button" class="ocr-infobox-close" onclick="dismissOcrInfobox()" title="Hinweis schließen">×</button>
+          </div>
+
+          <div id="canvasViewport" class="canvas-viewport">
+            <div id="canvasContainer" class="canvas-wrapper">
+              <div id="overlayLayer" class="overlay-layer"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Detected Entities & Manual Redactions Sidebar -->
+        <div class="editor-panel editor-sidebar-right">
+          <div class="card-title" style="margin-bottom: 0.5rem;">
+            <span>Schwärzungen (<span id="entityCountBadge">0</span>)</span>
+          </div>
+
+          <!-- 5-Level Sensitivity Quick Selector in Tab 2 -->
+          <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.55rem; margin-bottom: 0.65rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+              <span style="font-size: 0.76rem; font-weight: 600; color: var(--text-secondary);">🎯 Empfindlichkeit (5 Stufen):</span>
+              <span id="editorSensitivityBadge" style="font-size: 0.75rem; font-weight: 700; color: var(--accent-light);">3: Standard</span>
+            </div>
+            <div class="sensitivity-levels-5" style="margin-bottom: 0.35rem;">
+              <button type="button" class="sens-step-btn" data-editor-sens="minimal" onclick="setEditorSensitivity('minimal')" title="Stufe 1: Minimal – nur harte PII (IBAN, E-Mail, Pass/ID mit Prüfziffer)">1<span style="font-size: 0.62rem; font-weight: 400;">Min</span></button>
+              <button type="button" class="sens-step-btn" data-editor-sens="low" onclick="setEditorSensitivity('low')" title="Stufe 2: Niedrig – schützt Rechnungen vor Fehlalarmen (#, SKUs)">2<span style="font-size: 0.62rem; font-weight: 400;">Niedrig</span></button>
+              <button type="button" class="sens-step-btn active" data-editor-sens="balanced" onclick="setEditorSensitivity('balanced')" title="Stufe 3: Standard – ausgewogene DSGVO-Erkennung">3<span style="font-size: 0.62rem; font-weight: 400;">Std</span></button>
+              <button type="button" class="sens-step-btn" data-editor-sens="high" onclick="setEditorSensitivity('high')" title="Stufe 4: Hoch – sensitiv auf Namen & Adressen">4<span style="font-size: 0.62rem; font-weight: 400;">Hoch</span></button>
+              <button type="button" class="sens-step-btn" data-editor-sens="maximum" onclick="setEditorSensitivity('maximum')" title="Stufe 5: Maximal – Paranoia-Modus, alle Entitäten">5<span style="font-size: 0.62rem; font-weight: 400;">Max</span></button>
+            </div>
+            <div id="editorSensitivityHint" style="font-size: 0.68rem; color: var(--text-secondary); line-height: 1.25;">
+              Stufe 3: Ausgewogene DSGVO-Erkennung für Briefe &amp; Verträge.
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+            <button type="button" class="btn btn-secondary btn-sm" style="flex: 1;" onclick="selectAllEntitiesOnPage(true)">Alle an</button>
+            <button type="button" class="btn btn-secondary btn-sm" style="flex: 1;" onclick="selectAllEntitiesOnPage(false)">Alle aus</button>
+          </div>
+
+          <div id="entityListContainer" class="entity-list-scroll"></div>
+
+          <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 0.5rem;">
+            <button type="button" class="btn btn-primary" onclick="redactCurrentDocument()">
+              ⬛ Schwärzen &amp; PDF herunterladen
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="analyzeCurrentFile()">
+              🔄 Erneut analysieren
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: FINE-TUNED SETTINGS & AI CONFIG -->
+    <section id="tab-settings" class="tab-content">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem;">
+        <!-- Redaction Style & Export Filename -->
+        <div class="glass-card">
+          <div class="card-title">🎨 Schwärzungs-Stil &amp; Export-Dateiname</div>
+          <div class="form-group">
+            <label class="form-label">Schwärzungsstärke</label>
+            <select id="settingsStrengthSelect" class="form-control" onchange="setRedactionStrength(this.value)">
+              <option value="light">🔉 Leicht (Kerndaten, 0px Rand)</option>
+              <option value="standard" selected>⚖️ Standard (DSGVO-Empfehlung, 2px Puffer)</option>
+              <option value="strict">🔒 Streng (Inkl. Firmen &amp; allen Daten, 4px Puffer)</option>
+              <option value="maximum">🛡️ Maximal (Maximale Abdeckung, 5px Puffer)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Schwärzungsfarbe</label>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <input type="color" id="redactColorInput" value="#000000" style="width: 50px; height: 38px; border: none; border-radius: var(--radius-sm); cursor: pointer;" />
+              <span style="font-size: 0.85rem; color: var(--text-secondary);">Schwarz (#000000) für echte DSGVO-Schwärzung empfohlen</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="addLabelCheckbox" />
+              <span>Textlabel über der Schwärzung einblenden</span>
+            </label>
+            <input type="text" id="customLabelInput" class="form-control" value="[GESCHWÄRZT]" style="margin-top: 0.5rem;" placeholder="z.B. [GESCHWÄRZT] oder [{CATEGORY}]" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Rand-Polsterung (Padding, in PDF-Punkt)</label>
+            <select id="paddingInput" class="form-control">
+              <option value="0">0 pt (Exakt / Leicht)</option>
+              <option value="2" selected>2 pt (Empfohlen / Standard)</option>
+              <option value="4">4 pt (Großzügig / Streng)</option>
+              <option value="5">5 pt (Maximaler Schutz)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="rasterizeAllPagesCheckbox" />
+              <span>Alle Seiten rastern (maximale Sicherheit)</span>
+            </label>
+            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.35rem;">
+              Rendert auch Seiten ohne Schwärzungen als Bild. Verhindert jegliche versteckte Daten, erhöht aber Dateigröße und Exportzeit.
+            </div>
+          </div>
+
+          <div class="form-group" style="padding-top: 0.65rem; border-top: 1px solid var(--border-color); margin-bottom: 0;">
+            <label class="form-label">📄 Dateiname beim Export</label>
+            <select id="settingsFilenameModeSelect" class="form-control" onchange="setFilenameMode(this.value)">
+              <option value="suffix_default">Standard („_geschwaerzt.pdf“ anhängen)</option>
+              <option value="keep_original">Originalname behalten (ohne „_geschwaerzt“)</option>
+              <option value="custom">Frei wählen (Eigenes Suffix oder eigener Dateiname)</option>
+            </select>
+            <div id="settingsCustomFilenameBox" style="display: none; margin-top: 0.5rem;">
+              <input type="text" id="settingsCustomFilenameInput" class="form-control" value="{original}_anonymisiert" placeholder="z.B. _anonymisiert oder {original}_clean oder MeinName.pdf" oninput="onCustomFilenamePatternInput(this.value)" />
+            </div>
+            <div id="settingsFilenamePreview" style="font-size: 0.78rem; color: var(--accent-light); margin-top: 0.4rem;">
+              Vorschau: <strong>Dokument_geschwaerzt.pdf</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Thematic Categories -->
+        <div class="glass-card">
+          <div class="card-title">
+            <span>🏷️ Datenkategorien</span>
+            <div class="segmented-control segmented-sm">
+              <button type="button" class="seg-btn active" data-granularity="coarse" onclick="setCategoryGranularity('coarse')">📦 Grob</button>
+              <button type="button" class="seg-btn" data-granularity="granular" onclick="setCategoryGranularity('granular')">🔬 Granular</button>
+            </div>
+          </div>
+
+          <div id="settingsCoarseBox" class="checkbox-grid" style="margin-bottom: 1rem;">
+            <label class="checkbox-label"><input type="checkbox" id="catNames" checked onchange="onCoarseCategoryChange('names', this.checked)" /><span>👤 Namen &amp; Personen</span></label>
+            <label class="checkbox-label"><input type="checkbox" id="catAddresses" checked onchange="onCoarseCategoryChange('addresses', this.checked)" /><span>🏠 Anschriften &amp; Wohnorte</span></label>
+            <label class="checkbox-label"><input type="checkbox" id="catEmails" checked onchange="onCoarseCategoryChange('emails', this.checked)" /><span>✉️ E-Mail-Adressen</span></label>
+            <label class="checkbox-label"><input type="checkbox" id="catPhones" checked onchange="onCoarseCategoryChange('phones', this.checked)" /><span>📞 Telefon- &amp; Handynummern</span></label>
+            <label class="checkbox-label"><input type="checkbox" id="catIbans" checked onchange="onCoarseCategoryChange('ibans', this.checked)" /><span>💳 Bankdaten (IBAN, BIC)</span></label>
+            <label class="checkbox-label"><input type="checkbox" id="catTaxIds" checked onchange="onCoarseCategoryChange('tax_ids', this.checked)" /><span>🪪 Steuer-ID, RVNR, Ausweise</span></label>
+            <label class="checkbox-label"><input type="checkbox" id="catDates" checked onchange="onCoarseCategoryChange('dates', this.checked)" /><span>📅 Geburtsdaten / Fristen</span></label>
+            <label class="checkbox-label"><input type="checkbox" id="catOrgs" onchange="onCoarseCategoryChange('organizations', this.checked)" /><span>🏢 Firmen &amp; Körperschaften</span></label>
+          </div>
+
+          <div id="settingsFineNote" style="display: none; background: rgba(2, 132, 199, 0.1); border: 1px solid rgba(2, 132, 199, 0.3); padding: 0.65rem; border-radius: var(--radius-sm); font-size: 0.8rem; margin-bottom: 1rem;">
+            🔬 <strong>Granularer Modus ist aktiv!</strong> Alle 15 Einzelkategorien können auf Tab 1 feingesteuert werden.
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Eigene Stichwörter oder Regex-Muster</label>
+            <input type="text" id="customKeywordsInput" class="form-control" placeholder="Stichwort1, Stichwort2, ..." />
+          </div>
+        </div>
+
+        <!-- Exceptions & Whitelist -->
+        <div class="glass-card">
+          <div class="card-title">🛡️ Ausnahmen &amp; Whitelist (Nicht schwärzen)</div>
+          <p class="form-sublabel">Begriffe, die niemals geschwärzt werden dürfen (ein Begriff pro Zeile):</p>
+          <textarea id="whitelistInput" class="form-control" rows="4" placeholder="Eigene Firma GmbH&#10;Dr. Hans Mustermann&#10;Berlin"></textarea>
+          <label class="checkbox-label" style="margin-top: 0.75rem;">
+            <input type="checkbox" id="caseSensitiveCheckbox" />
+            <span>Groß-/Kleinschreibung exakt beachten</span>
+          </label>
+        </div>
+
+        <!-- Unified AI Settings (Ollama, LM Studio, oMLX & Remote AI Server) -->
+        <div class="glass-card">
+          <div class="card-title">
+            <span>🧠 Lokale &amp; Netzwerk KI-Brücke</span>
+            <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="openModelAdvisorModal()">
+                💡 Welches KI-Modell soll ich nutzen?
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" id="testOllamaBtn">
+                🔍 Autodiscovery starten
+              </button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Gewählter KI-Provider</label>
+            <select id="aiProviderSelect" class="form-control" onchange="selectAiProvider(this.value)">
+              <option value="none">⚡ Ohne KI (100% Browser Regel- &amp; Kontexterkennung)</option>
+              <option value="ollama">🦙 Ollama (Lokaler Server • 127.0.0.1:11434)</option>
+              <option value="lmstudio">🎸 LM Studio (Lokaler Server • 127.0.0.1:1234)</option>
+              <option value="omlx">🍏 oMLX (Apple Silicon Server • 127.0.0.1:1060)</option>
+              <option value="remote">🌐 Mein KI-Server ist ein anderer Rechner (Manuelle URL / LAN)</option>
+            </select>
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.65rem;">
+              <label class="checkbox-label">
+                <input type="checkbox" id="ollamaEnableCheckbox" onchange="onAiEnableCheckboxChange(this.checked)" />
+                <span>KI-Server zusätzlich zur Browser-Engine nutzen</span>
+              </label>
+              <button type="button" class="btn btn-outline btn-sm" onclick="selectAiProvider('remote'); document.getElementById('remoteEndpointInput')?.focus();">
+                🌐 Mein KI-Server ist ein anderer Rechner
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Modell des gewählten Providers</label>
+            <select id="ollamaModelSelect" class="form-control" onchange="onProviderModelChange(this.value)">
+              <option value="">100% Browser-Modus (Ohne KI)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">🦙 Ollama Endpoint (Lokal Port 11434)</label>
+            <input type="text" id="ollamaEndpointInput" class="form-control" value="http://127.0.0.1:11434" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">🎸 LM Studio Endpoint (Lokal Port 1234, OpenAI-kompatibel)</label>
+            <input type="text" id="lmstudioEndpointInput" class="form-control" value="http://127.0.0.1:1234" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">🍏 oMLX Endpoint (Lokal Port 1060) &amp; Optionaler API-Key</label>
+            <div style="display: flex; gap: 0.5rem;">
+              <input type="text" id="omlxEndpointInput" class="form-control" value="http://127.0.0.1:1060" style="flex: 1;" />
+              <input type="password" id="omlxApiKeyInput" class="form-control" placeholder="oMLX API-Key (optional)" style="flex: 1;" />
+            </div>
+          </div>
+
+          <!-- Remote Server Box in Tab 3 -->
+          <div id="settingsRemoteServerBox" class="form-group" style="padding: 0.8rem; background: var(--bg-primary); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: var(--radius-sm);">
+            <label class="form-label" style="color: var(--accent-light);">🌐 Mein KI-Server ist ein anderer Rechner (Manuelle URL im LAN)</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.5rem;">
+              <input type="text" id="remoteEndpointInput" class="form-control" value="" placeholder="z.B. http://192.168.1.100:11434 oder :1234" oninput="syncRemoteInputs('settings')" />
+              <select id="remoteApiTypeSelect" class="form-control" onchange="syncRemoteInputs('settings')">
+                <option value="openai">OpenAI-kompatibel (LM Studio / oMLX / vLLM)</option>
+                <option value="ollama">Ollama API (:11434)</option>
+              </select>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <input type="password" id="remoteApiKeyInput" class="form-control" placeholder="Optionaler API-Key" style="flex: 1;" oninput="syncRemoteInputs('settings')" />
+              <button type="button" class="btn btn-primary btn-sm" onclick="probeRemoteAiServer(true)">
+                🔍 Server prüfen &amp; Modelle erkennen
+              </button>
+            </div>
+          </div>
+
+          <div style="padding: 0.65rem 0.85rem; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: var(--radius-sm); font-size: 0.78rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <span>📥 <strong>Lokale KI herunterladen:</strong></span>
+            <div style="display: flex; gap: 0.45rem; flex-wrap: wrap;">
+              <a href="https://ollama.com/download" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">🦙 Ollama Download</a>
+              <a href="https://lmstudio.ai/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">🎸 LM Studio Download</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card: High-Precision OCR & Vision Configuration -->
+        <div class="glass-card">
+          <div class="card-title">🔍 Optische Texterkennung (OCR) &amp; Vision-Qualität</div>
+          <div class="form-group">
+            <label class="form-label">OCR-Präzisionsmodus (Global)</label>
+            <select id="settingsOcrPrecisionSelect" class="form-control" onchange="setOcrPrecision(this.value)">
+              <option value="standard">Standard (Schnell, 150–200 DPI, Fast-Modelle)</option>
+              <option value="precise">🎯 Genaue OCR (300 DPI, Sauvola-Binarisierung, Deskew, Best-Modelle)</option>
+            </select>
+            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.35rem;">
+              Empfohlen für Handy-Fotos, schräg eingescannte Belege und verrauschte Dokumente.
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">OCR-Spracherkennung</label>
+            <select id="settingsOcrLanguageSelect" class="form-control" onchange="setOcrLanguage(this.value)">
+              <option value="deu+eng">Deutsch &amp; Englisch kombiniert (deu+eng)</option>
+              <option value="deu">Nur Deutsch (deu)</option>
+              <option value="eng">Nur Englisch (eng)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="settingsDeskewCheckbox" onchange="setOcrDeskew(this.checked)" checked />
+              <span>Automatische Schräglagen-Korrektur (Deskew &amp; Box-Rücktransformation)</span>
+            </label>
+          </div>
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="settingsVisionOcrCheckbox" onchange="setVisionOcr(this.checked)" checked />
+              <span>Vision-KI-Korrektur für unsichere Textstellen nutzen (wenn KI aktiv)</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 1rem; text-align: right;">
+        <button id="saveSettingsBtn" class="btn btn-primary btn-lg">
+          💾 Einstellungen im Browser speichern
+        </button>
+      </div>
+    </section>
+
+    <!-- TAB 4: PRIVACY GUARANTEE, ARCHITECTURE & LICENSES -->
+    <section id="tab-about" class="tab-content">
+      <div class="glass-card privacy-hero-card">
+        <div class="privacy-hero-header">
+          <div class="privacy-seal">🛡️</div>
+          <div>
+            <div class="privacy-badge-tag">WEB-APP &amp; BROWSER-EDITION • 100% CLIENT-SIDE &amp; LOKALE KI • v<span class="app-version">1.0.4</span></div>
+            <h2 style="font-size: 1.4rem; margin: 0.25rem 0;">Wie funktioniert BlackMyData bei der Website-Nutzung mit lokaler KI?</h2>
+            <p style="font-size: 0.9rem; color: var(--text-secondary);">
+              Auf diesem Webserver wird lediglich die statische Web-Oberfläche ausgeliefert. <strong>Kein einziges PDF wird jemals an diesen Webserver gesendet!</strong> Die gesamte Verarbeitung passiert zu 100 % im Browser des Besuchers – und kann optional direkt mit dessen eigenem Rechner (<code>127.0.0.1</code>) oder einem lokalen KI-Server im Netzwerk sprechen.
+            </p>
+          </div>
+        </div>
+
+        <div class="privacy-guarantees-grid">
+          <div class="privacy-guarantee-item">
+            <div class="pg-icon">🌐</div>
+            <div>
+              <strong>Modus 1: 100% im Browser (Überall sofort nutzbar)</strong>
+              <p>Dank <code>PDF.js</code>, unserer deutschen PII- &amp; Kontexterkennung und <code>jsPDF</code> läuft das Analysieren und echte physische Schwärzen komplett im Browser – ganz ohne lokalen Server auf jedem Mac, Windows-PC oder Tablet!</p>
+            </div>
+          </div>
+
+          <div class="privacy-guarantee-item">
+            <div class="pg-icon">🦙</div>
+            <div>
+              <strong>Modus 2: Direkte Brücke zu 127.0.0.1 (Ollama, LM Studio &amp; oMLX)</strong>
+              <p>Weil der JavaScript-Code im Browser auf deinem Gerät ausgeführt wird, zeigt <code>fetch("http://127.0.0.1:11434")</code> bzw. <code>:1234</code> auf <strong>deinen eigenen Rechner</strong>! Auch ein anderer KI-Rechner im lokalen Netzwerk kann manuell angebunden werden.</p>
+            </div>
+          </div>
+
+          <div class="privacy-guarantee-item">
+            <div class="pg-icon">🔑</div>
+            <div>
+              <strong>CORS-Freigabe für Ollama bei HTTPS-Websites</strong>
+              <p>Damit Ollama Anfragen von einer Website-Domain (z.B. <code>https://deine-seite.de</code>) akzeptiert, führe einmalig im Terminal aus:<br>
+              <code class="ollama-origins-cmd" style="display:inline-block; margin-top:4px; padding:2px 6px; background:var(--bg-primary); border-radius:4px;">launchctl setenv OLLAMA_ORIGINS &quot;https://deine-seite.de&quot;</code> und starte Ollama neu.</p>
+            </div>
+          </div>
+
+          <div class="privacy-guarantee-item">
+            <div class="pg-icon">⬛</div>
+            <div>
+              <strong>Echte physische PDF-Schwärzung im Browser (Hybrid-Verfahren)</strong>
+              <p>Beim Export werden Seiten mit Schwärzungen hochauflösend gerastert (Raster-Burn), sodass sensible Text-Vektoren physisch vernichtet werden. Seiten ohne Schwärzungen bleiben 1:1 als verlustfreie Vektor-Seiten erhalten.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="privacy-cleanup-bar">
+          <div>
+            <strong>🧹 Browser-Arbeitsspeicher bereinigen</strong>
+            <p style="font-size: 0.8rem; color: var(--text-secondary);">
+              Entfernt sofort alle aktuell im Browser geöffneten PDFs und Blob-URLs aus dem Arbeitsspeicher.
+            </p>
+          </div>
+          <button class="btn btn-danger" onclick="cleanupTemporaryData()">
+            🗑️ Sitzungsdaten jetzt aus Browser löschen
+          </button>
+        </div>
+      </div>
+
+      <!-- Open-Source Packages Table -->
+      <div class="glass-card">
+        <div class="card-title">
+          <div>
+            <span>📦 Über BlackMyData Web &amp; Offengelegte Open-Source-Bibliotheken</span>
+          </div>
+          <span id="aboutVersionBadge" class="status-badge">Version 1.0.0 • Browser-Edition (100% Client-Side)</span>
+        </div>
+
+        <div style="overflow-x: auto; margin-top: 1rem;">
+          <table class="doc-table licenses-table">
+            <thead>
+              <tr>
+                <th>Paketname</th>
+                <th>Version</th>
+                <th>Lizenz</th>
+                <th>Verwendungszweck in BlackMyData</th>
+              </tr>
+            </thead>
+            <tbody id="packagesTableBody"></tbody>
+          </table>
+        </div>
+        <details id="licenseTextsDetails" style="margin-top: 1rem;">
+          <summary>📄 Vollständige Lizenztexte anzeigen (MIT-Lizenz von BlackMyData, Hinweise der Fremdkomponenten, Apache-2.0)</summary>
+          <pre id="licenseTextsPre" style="white-space: pre-wrap; max-height: 24rem; overflow: auto; font-size: 0.75rem;">Wird geladen…</pre>
+          <p style="font-size: 0.8rem; color: var(--text-secondary);">Dateien: <a href="licenses/THIRD_PARTY_NOTICES.txt" target="_blank" rel="noopener">licenses/THIRD_PARTY_NOTICES.txt</a> · <a href="licenses/Apache-2.0.txt" target="_blank" rel="noopener">licenses/Apache-2.0.txt</a> · <a href="licenses/LICENSE.txt" target="_blank" rel="noopener">licenses/LICENSE.txt</a></p>
+        </details>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ANIMATED AI & OCR PROCESSING MODAL OVERLAY -->
+  <div id="loadingOverlay" class="ai-loading-backdrop" style="display: none;" aria-live="polite">
+    <div class="ai-loading-card">
+      <div class="ai-loading-top-bar">
+        <span id="loadingProviderBadge" class="ai-provider-pill">
+          <span class="ai-pulse-dot"></span>
+          <span id="loadingProviderText">100% Browser-Engine • DSGVO-sicher</span>
+        </span>
+        <span id="loadingTimer" class="ai-timer-badge">0.0s</span>
+      </div>
+
+      <div class="ai-svg-stage">
+        <svg class="ai-scanner-svg" viewBox="0 0 440 190" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="aiCoreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#38bdf8" />
+              <stop offset="50%" stop-color="#6366f1" />
+              <stop offset="100%" stop-color="#a855f7" />
+            </linearGradient>
+            <linearGradient id="laserBeamGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="rgba(56, 189, 248, 0)" />
+              <stop offset="20%" stop-color="#38bdf8" />
+              <stop offset="50%" stop-color="#818cf8" />
+              <stop offset="80%" stop-color="#38bdf8" />
+              <stop offset="100%" stop-color="rgba(56, 189, 248, 0)" />
+            </linearGradient>
+            <linearGradient id="laserGlowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="rgba(56, 189, 248, 0.35)" />
+              <stop offset="100%" stop-color="rgba(99, 102, 241, 0.0)" />
+            </linearGradient>
+            <filter id="glowFilter" x="-25%" y="-25%" width="150%" height="150%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
+          <g class="ai-stream-paths">
+            <path d="M 145 70 C 195 45, 225 45, 265 55" stroke="rgba(56, 189, 248, 0.3)" stroke-width="1.5" stroke-dasharray="4 4" />
+            <path d="M 155 95 C 200 95, 225 95, 265 95" stroke="rgba(129, 140, 248, 0.4)" stroke-width="2" stroke-dasharray="5 5" />
+            <path d="M 145 120 C 195 145, 225 145, 265 135" stroke="rgba(168, 85, 247, 0.3)" stroke-width="1.5" stroke-dasharray="4 4" />
+            <circle r="3.5" fill="#38bdf8" filter="url(#glowFilter)" class="ai-particle ai-particle-1" />
+            <circle r="4" fill="#818cf8" filter="url(#glowFilter)" class="ai-particle ai-particle-2" />
+            <circle r="3.5" fill="#c084fc" filter="url(#glowFilter)" class="ai-particle ai-particle-3" />
+          </g>
+          <g transform="translate(95, 95)">
+            <circle r="58" stroke="rgba(56, 189, 248, 0.25)" stroke-width="1.5" stroke-dasharray="14 8 6 8" class="ai-orbit-outer" />
+            <circle r="44" stroke="rgba(129, 140, 248, 0.4)" stroke-width="2" stroke-dasharray="22 12" class="ai-orbit-inner" />
+            <circle r="24" fill="url(#aiCoreGrad)" class="ai-core-pulse" filter="url(#glowFilter)" />
+            <circle r="18" fill="#0f172a" />
+            <text x="0" y="5" text-anchor="middle" fill="#f8fafc" font-size="13" font-weight="800" font-family="monospace">KI</text>
+          </g>
+          <g transform="translate(265, 20)">
+            <rect x="4" y="6" width="126" height="152" rx="10" fill="rgba(0, 0, 0, 0.45)" />
+            <rect x="0" y="0" width="126" height="152" rx="10" fill="#1e293b" stroke="rgba(148, 163, 184, 0.35)" stroke-width="1.8" />
+            <rect x="14" y="14" width="42" height="8" rx="4" fill="#38bdf8" opacity="0.85" />
+            <rect x="44" y="32" width="52" height="10" rx="3" class="svg-pii-bar svg-pii-1" />
+            <rect x="14" y="50" width="96" height="5" rx="2.5" fill="#475569" />
+            <rect x="14" y="64" width="62" height="10" rx="3" class="svg-pii-bar svg-pii-2" />
+            <rect x="14" y="82" width="84" height="5" rx="2.5" fill="#475569" />
+            <rect x="42" y="94" width="70" height="10" rx="3" class="svg-pii-bar svg-pii-3" />
+            <rect x="14" y="126" width="48" height="10" rx="3" class="svg-pii-bar svg-pii-4" />
+            <g class="svg-laser-scanner">
+              <rect x="-6" y="0" width="138" height="18" fill="url(#laserGlowGrad)" />
+              <line x1="-8" y1="0" x2="134" y2="0" stroke="url(#laserBeamGrad)" stroke-width="3" filter="url(#glowFilter)" />
+            </g>
+          </g>
+        </svg>
+      </div>
+
+      <div class="ai-loading-text-group">
+        <h3 id="loadingTitle" class="ai-loading-title">PDF-Analyse &amp; Schwärzung arbeitet...</h3>
+        <p id="loadingSubtitle" class="ai-loading-subtitle">
+          Dokument wird zu 100% lokal im Browser-Arbeitsspeicher verarbeitet
+        </p>
+      </div>
+
+      <div class="ai-progress-wrapper">
+        <div class="ai-progress-track">
+          <div id="loadingProgressBar" class="ai-progress-fill" style="width: 15%;"></div>
+        </div>
+        <div class="ai-progress-meta">
+          <span id="loadingCurrentFileLabel">Verarbeite PDF...</span>
+          <strong id="loadingProgressPercent">15%</strong>
+        </div>
+      </div>
+
+      <div class="ai-phases-list">
+        <div id="loadingPhase1" class="ai-phase-item active">
+          <span class="phase-status-icon">🚀</span>
+          <span class="phase-label">Initialisiere PDF.js &amp; Erkennungs-Engine...</span>
+          <span class="phase-spinner"></span>
+        </div>
+        <div id="loadingPhase2" class="ai-phase-item">
+          <span class="phase-status-icon">👁️</span>
+          <span class="phase-label">Extrahiere Text &amp; Wort-Koordinaten aller Seiten...</span>
+          <span class="phase-spinner"></span>
+        </div>
+        <div id="loadingPhase3" class="ai-phase-item">
+          <span class="phase-status-icon">🧠</span>
+          <span class="phase-label">Deutsche Kontext-, Namens- &amp; KI-Analyse...</span>
+          <span class="phase-spinner"></span>
+        </div>
+        <div id="loadingPhase4" class="ai-phase-item">
+          <span class="phase-status-icon">🎯</span>
+          <span class="phase-label">Physische Schwärzung &amp; PDF-Generierung...</span>
+          <span class="phase-spinner"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STARTUP KI-PROVIDER SELECTION MODAL (No auto-connect; user chooses provider explicitly) -->
+  <div id="aiProviderModal" class="wizard-modal-backdrop" style="display: none; z-index: 2200;">
+    <div class="wizard-modal" style="max-width: 780px;">
+      <div class="wizard-header">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <img src="./icon.svg" alt="Logo" style="width: 34px; height: 34px; border-radius: 8px;" onerror="this.style.display='none'" />
+          <div>
+            <h2 style="font-size: 1.15rem; font-weight: 700;">🧠 Modus &amp; KI-Provider auswählen</h2>
+            <p style="font-size: 0.78rem; color: var(--text-secondary);">
+              BlackMyData läuft zu 100% im Browser (ohne Server) oder verbindet sich auf Wunsch mit Ollama, LM Studio, oMLX oder einem anderen KI-Rechner.
+            </p>
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="closeAiProviderModal()" title="Schließen">✕</button>
+      </div>
+
+      <div class="wizard-body" style="padding: 1.1rem 1.4rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.65rem; flex-wrap: wrap; margin-bottom: 0.85rem; padding: 0.65rem 0.9rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+          <div style="font-size: 0.8rem; color: var(--text-secondary);">
+            🔍 <strong>Autodiscovery-Erkennung:</strong> Prüft lokal <code>127.0.0.1</code> auf Ollama (<code>:11434</code>), LM Studio (<code>:1234</code>) &amp; oMLX (<code>:1060</code>), ohne sich automatisch zu verbinden.
+          </div>
+          <div style="display: flex; gap: 0.45rem; flex-wrap: wrap;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="openModelAdvisorModal()">
+              💡 Welches KI-Modell soll ich nutzen?
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="runAutodiscoverOnly(true)">
+              🔄 Jetzt per Autodiscovery erkennen
+            </button>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.65rem;">
+          <!-- Card 1: Ohne KI (100% im Browser) -->
+          <div class="mode-card active" data-modal-provider="none" onclick="selectAiProvider('none')">
+            <div class="mode-card-header" style="justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span class="mode-icon">⚡</span>
+                <div>
+                  <div class="mode-title">Ohne KI starten (100% im Browser – Regel- &amp; Kontexterkennung)</div>
+                  <div class="mode-subtitle">Kein lokaler Server nötig • Funktioniert bei jeder Website-Nutzung sofort!</div>
+                </div>
+              </div>
+              <span class="status-badge"><span class="badge-dot dot-green"></span> Sofort bereit</span>
+            </div>
+            <p class="mode-desc" style="margin-top: 0.3rem;">
+              Verarbeitet PDFs komplett im Browser des Besuchers inkl. deutscher Vor-/Nachnamen-, Polysem- (<em>Rose, Winter, Schwarz, Wolf</em>), Adress-, IBAN- und Steuer-ID-Erkennung.
+            </p>
+          </div>
+
+          <!-- Card 2: Ollama (127.0.0.1:11434) -->
+          <div class="mode-card" data-modal-provider="ollama" onclick="selectAiProvider('ollama')">
+            <div class="mode-card-header" style="justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span class="mode-icon">🦙</span>
+                <div>
+                  <div class="mode-title">Lokales Ollama (Port 11434)</div>
+                  <div class="mode-subtitle" id="modalOllamaSubtitle">http://127.0.0.1:11434</div>
+                </div>
+              </div>
+              <span id="modalOllamaBadge" class="status-badge"><span class="badge-dot dot-yellow"></span> Nicht gescannt</span>
+            </div>
+            <div style="margin-top: 0.5rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;" onclick="event.stopPropagation();">
+              <label style="font-size: 0.8rem; color: var(--text-secondary);">Ollama-Modell:</label>
+              <select id="modalOllamaModelSelect" class="form-control" style="flex: 1; min-width: 220px; padding: 0.3rem 0.5rem; font-size: 0.82rem;" onchange="selectAiProvider('ollama', this.value)">
+                <option value="ollama::qwen2.5:7b-instruct">Klicke auf Autodiscovery zum Erkennen der Modelle...</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Card 3: LM Studio (127.0.0.1:1234) -->
+          <div class="mode-card" data-modal-provider="lmstudio" onclick="selectAiProvider('lmstudio')">
+            <div class="mode-card-header" style="justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span class="mode-icon">🎸</span>
+                <div>
+                  <div class="mode-title">Lokales LM Studio (OpenAI-kompatibler Server • Port 1234)</div>
+                  <div class="mode-subtitle" id="modalLmstudioSubtitle">http://127.0.0.1:1234</div>
+                </div>
+              </div>
+              <span id="modalLmstudioBadge" class="status-badge"><span class="badge-dot dot-yellow"></span> Nicht gescannt</span>
+            </div>
+            <div style="margin-top: 0.5rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;" onclick="event.stopPropagation();">
+              <label style="font-size: 0.8rem; color: var(--text-secondary);">LM Studio Modell:</label>
+              <select id="modalLmstudioModelSelect" class="form-control" style="flex: 1; min-width: 220px; padding: 0.3rem 0.5rem; font-size: 0.82rem;" onchange="selectAiProvider('lmstudio', this.value)">
+                <option value="lmstudio::default">Klicke auf Autodiscovery zum Erkennen der Modelle...</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Card 4: oMLX (127.0.0.1:1060) -->
+          <div class="mode-card" data-modal-provider="omlx" onclick="selectAiProvider('omlx')">
+            <div class="mode-card-header" style="justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span class="mode-icon">🍏</span>
+                <div>
+                  <div class="mode-title">Lokales oMLX (Apple Silicon Server • Port 1060)</div>
+                  <div class="mode-subtitle" id="modalOmlxSubtitle">http://127.0.0.1:1060</div>
+                </div>
+              </div>
+              <span id="modalOmlxBadge" class="status-badge"><span class="badge-dot dot-yellow"></span> Nicht gescannt</span>
+            </div>
+            <div style="margin-top: 0.5rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;" onclick="event.stopPropagation();">
+              <label style="font-size: 0.8rem; color: var(--text-secondary);">oMLX-Modell:</label>
+              <select id="modalOmlxModelSelect" class="form-control" style="flex: 1; min-width: 180px; padding: 0.3rem 0.5rem; font-size: 0.82rem;" onchange="selectAiProvider('omlx', this.value)">
+                <option value="omlx::default">Klicke auf Autodiscovery zum Erkennen der Modelle...</option>
+              </select>
+              <input type="password" id="modalOmlxApiKeyInput" class="form-control" style="max-width: 185px; padding: 0.3rem 0.5rem; font-size: 0.8rem;" placeholder="API-Key (falls aktiv)" />
+            </div>
+          </div>
+
+          <!-- Card 5: Mein KI-Server ist ein anderer Rechner (Remote / LAN) -->
+          <div class="mode-card" data-modal-provider="remote" onclick="selectAiProvider('remote')">
+            <div class="mode-card-header" style="justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span class="mode-icon">🌐</span>
+                <div>
+                  <div class="mode-title">Mein KI-Server ist ein anderer Rechner (Manuelle Server-URL)</div>
+                  <div class="mode-subtitle" id="modalRemoteSubtitle">Verbinde Ollama, LM Studio, vLLM oder oMLX über deine eigene Netzwerk-IP / URL</div>
+                </div>
+              </div>
+              <span id="modalRemoteBadge" class="status-badge"><span class="badge-dot dot-yellow"></span> Manuelle URL</span>
+            </div>
+            <div style="margin-top: 0.55rem; display: flex; flex-direction: column; gap: 0.5rem;" onclick="event.stopPropagation();">
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 0.5rem;">
+                <input type="text" id="modalRemoteUrlInput" class="form-control" style="padding: 0.32rem 0.55rem; font-size: 0.82rem;" value="" placeholder="z.B. http://192.168.1.100:11434 oder :1234" oninput="syncRemoteInputs('modal')" />
+                <select id="modalRemoteApiTypeSelect" class="form-control" style="padding: 0.32rem 0.55rem; font-size: 0.82rem;" onchange="syncRemoteInputs('modal')">
+                  <option value="openai">OpenAI-kompatibel (LM Studio / oMLX / vLLM)</option>
+                  <option value="ollama">Ollama API (:11434)</option>
+                </select>
+                <input type="password" id="modalRemoteApiKeyInput" class="form-control" style="padding: 0.32rem 0.55rem; font-size: 0.82rem;" placeholder="API-Key (optional)" oninput="syncRemoteInputs('modal')" />
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                <button type="button" class="btn btn-primary btn-sm" onclick="probeRemoteAiServer(true)">
+                  🔍 Server prüfen &amp; Modelle erkennen
+                </button>
+                <select id="modalRemoteModelSelect" class="form-control" style="flex: 1; min-width: 200px; padding: 0.3rem 0.5rem; font-size: 0.82rem;" onchange="selectAiProvider('remote', this.value)">
+                  <option value="remote::default">Nach Server-Prüfung Modell auswählen...</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Vision Model Option for Low-Confidence OCR Corrections -->
+          <div style="margin-top: 0.65rem; padding: 0.75rem 0.9rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+              <div>
+                <strong style="font-size: 0.85rem;">👁️ Vision-KI für OCR-Korrektur (optional):</strong>
+                <div style="font-size: 0.78rem; color: var(--text-secondary);">
+                  Nutzt ein multimodales Modell (z.B. Qwen2.5-VL, Llama3.2-Vision, MiniCPM-V) für unscharfe oder unleserliche Textstellen.
+                </div>
+              </div>
+              <select id="modalVisionModelSelect" class="form-control" style="min-width: 200px; padding: 0.3rem 0.5rem; font-size: 0.82rem;" onchange="setVisionModel(this.value)">
+                <option value="">Kein Vision-Modell (reine Tesseract-OCR)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Direct Ollama & LM Studio Download Box + Model Advisor -->
+        <div id="modalNoAiDownloadBox" style="margin-top: 0.8rem; padding: 0.7rem 0.9rem; border-radius: var(--radius-sm); background: rgba(16, 185, 129, 0.09); border: 1px solid rgba(16, 185, 129, 0.3); font-size: 0.79rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.6rem;">
+          <div>
+            📥 <strong>Keine lokale KI erkannt?</strong> Lade Ollama oder LM Studio kostenlos herunter oder prüfe unsere Modell-Empfehlung (Standard: 12 GB VRAM):
+          </div>
+          <div style="display: flex; gap: 0.45rem; flex-wrap: wrap;">
+            <a href="https://ollama.com/download" target="_blank" rel="noopener noreferrer" class="btn btn-success btn-sm">
+              🦙 Ollama herunterladen
+            </a>
+            <a href="https://lmstudio.ai/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">
+              🎸 LM Studio herunterladen
+            </a>
+            <button type="button" class="btn btn-outline btn-sm" onclick="openModelAdvisorModal()">
+              💡 Welches KI-Modell soll ich nutzen?
+            </button>
+          </div>
+        </div>
+
+        <!-- Helpful Website HTTPS <-> Localhost CORS Info Box -->
+        <div style="margin-top: 0.75rem; padding: 0.7rem 0.9rem; border-radius: var(--radius-sm); background: rgba(2, 132, 199, 0.09); border: 1px solid rgba(56, 189, 248, 0.28); font-size: 0.77rem; color: var(--text-secondary);">
+          💡 <strong>Tipp für Website-Nutzung + Lokale KI:</strong> Damit dein Browser von einer HTTPS-Website aus mit deinem lokalen Ollama (<code>127.0.0.1:11434</code>) sprechen darf, erlaube einmalig im Terminal CORS für Ollama:
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.35rem; flex-wrap: wrap;">
+            <code class="ollama-origins-cmd" style="background: var(--bg-primary); padding: 0.2rem 0.5rem; border-radius: 4px; color: var(--accent-light);">launchctl setenv OLLAMA_ORIGINS &quot;https://deine-seite.de&quot;</code>
+            <button type="button" class="btn btn-secondary btn-sm ollama-origins-copy" style="padding: 0.15rem 0.5rem; font-size: 0.7rem;" onclick="copyCorsCommand()">📋 Befehl kopieren</button>
+            <span>(In LM Studio einfach in den Developer-Logs <em>CORS aktivieren</em> einschalten – oder <strong>⚡ Ohne KI</strong> 100% im Browser nutzen!)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="wizard-footer" style="justify-content: space-between; align-items: center;">
+        <label class="checkbox-label" style="font-size: 0.8rem; color: var(--text-secondary);">
+          <input type="checkbox" id="rememberProviderStartupCheckbox" />
+          <span>Beim nächsten Aufruf nicht mehr fragen (Auswahl merken)</span>
+        </label>
+        <button type="button" class="btn btn-primary btn-lg" onclick="confirmAiProviderModal()">
+          ✅ Auswahl übernehmen &amp; Starten
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- KI-MODELL BERATER MODAL ("Welches KI-Modell soll ich nutzen?" - 12 GB VRAM Default + Hardware Check) -->
+  <div id="modelAdvisorModal" class="wizard-modal-backdrop" style="display: none; z-index: 2350;">
+    <div class="wizard-modal" style="max-width: 820px;">
+      <div class="wizard-header">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="font-size: 1.7rem;">💡</span>
+          <div>
+            <h2 style="font-size: 1.15rem; font-weight: 700;">Welches KI-Modell soll ich nutzen? (Geschwindigkeit vs. Qualität)</h2>
+            <p style="font-size: 0.78rem; color: var(--text-secondary);">
+              Optimierte Empfehlungen für deutsche PDF-Schwärzung (Vor-/Nachnamen, Polyseme &amp; Kontext im Fließtext)
+            </p>
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="closeModelAdvisorModal()" title="Schließen">✕</button>
+      </div>
+
+      <div class="wizard-body" style="padding: 1.2rem 1.5rem;">
+        <!-- Hardware Check Box with Privacy Notice -->
+        <div style="padding: 0.9rem 1rem; background: var(--bg-primary); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: var(--radius-md); margin-bottom: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.55rem;">
+            <div>
+              <strong style="font-size: 0.92rem; color: var(--text-primary);">🖥️ Gerät prüfen &amp; Empfehlung an deine Hardware anpassen</strong>
+              <span class="status-badge" id="advisorActiveTierBadge" style="margin-left: 0.4rem;">Standard-Profil: 12 GB VRAM ⭐</span>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" onclick="runHardwareAdvisorCheck()">
+              🖥️ Gerät jetzt lokal prüfen
+            </button>
+          </div>
+
+          <div style="padding: 0.55rem 0.75rem; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.28); border-radius: var(--radius-sm); font-size: 0.76rem; color: var(--text-secondary);">
+            🔒 <strong>Datenschutzhinweis zur Geräteprüfung:</strong> Die Prüfung liest lediglich lokal im Browser verfügbare Hardware-Hinweise (GPU-Renderer via WebGL, CPU-Kerne, RAM-Klasse) aus, um passende KI-Modelle vorzuschlagen. <strong>Es werden keinerlei Gerätedaten an einen Server gesendet oder gespeichert.</strong>
+          </div>
+
+          <div id="hardwareCheckResultBox" style="display: none; margin-top: 0.65rem; padding: 0.65rem 0.85rem; background: rgba(2, 132, 199, 0.12); border: 1px solid rgba(56, 189, 248, 0.4); border-radius: var(--radius-sm); font-size: 0.82rem;"></div>
+
+          <!-- Manual VRAM Tier Selector -->
+          <div style="display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; margin-top: 0.7rem;">
+            <span style="font-size: 0.77rem; color: var(--text-secondary); margin-right: 0.25rem;">VRAM / Unified Memory Klasse:</span>
+            <button type="button" class="btn btn-secondary btn-sm" data-vram-tier-btn="8gb" onclick="selectAdvisorVramTier('8gb')">6–8 GB VRAM</button>
+            <button type="button" class="btn btn-primary btn-sm" data-vram-tier-btn="12gb" onclick="selectAdvisorVramTier('12gb')">⭐ 12 GB VRAM (Standard)</button>
+            <button type="button" class="btn btn-secondary btn-sm" data-vram-tier-btn="16gb" onclick="selectAdvisorVramTier('16gb')">16 GB VRAM / Mac M-Serie</button>
+            <button type="button" class="btn btn-secondary btn-sm" data-vram-tier-btn="24gb" onclick="selectAdvisorVramTier('24gb')">24+ GB VRAM / Pro</button>
+          </div>
+        </div>
+
+        <!-- 3 Model Recommendation Cards (Speed, Balance, Max Quality) -->
+        <div id="advisorRecommendationsContainer" style="display: flex; flex-direction: column; gap: 0.8rem;">
+          <!-- Populated dynamically by renderAdvisorRecommendations() with 12 GB VRAM default -->
+        </div>
+
+        <!-- Direct Download Footer inside Advisor -->
+        <div style="margin-top: 1rem; padding: 0.75rem 0.95rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.65rem; font-size: 0.8rem;">
+          <div>
+            📥 <strong>Laufzeitumgebung kostenlos herunterladen:</strong> Starte die Modelle mit einem Klick über Ollama oder LM Studio:
+          </div>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <a href="https://ollama.com/download" target="_blank" rel="noopener noreferrer" class="btn btn-success btn-sm">
+              🦙 Ollama herunterladen (ollama.com)
+            </a>
+            <a href="https://lmstudio.ai/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">
+              🎸 LM Studio herunterladen (lmstudio.ai)
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="wizard-footer" style="justify-content: flex-end;">
+        <button type="button" class="btn btn-primary" onclick="closeModelAdvisorModal()">
+          Verstanden &amp; Schließen
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- INTERACTIVE 4-STEP SETUP WIZARD MODAL -->
+  <div id="setupWizardModal" class="wizard-modal-backdrop" style="display: none;">
+    <div class="wizard-modal">
+      <div class="wizard-header">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <img src="./icon.svg" alt="Logo" style="width: 34px; height: 34px; border-radius: 8px;" onerror="this.style.display='none'" />
+          <div>
+            <h2 style="font-size: 1.15rem; font-weight: 700;">BlackMyData Einrichtungsassistent</h2>
+            <p style="font-size: 0.75rem; color: var(--text-secondary);">In 4 kurzen Schritten zur optimalen PDF-Schwärzung</p>
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="closeSetupWizard()" title="Assistent schließen">✕</button>
+      </div>
+
+      <div class="wizard-steps-bar">
+        <div class="wizard-step-dot active" data-step="1" onclick="goToWizardStep(1)"><span class="step-num">1</span><span class="step-label">Datenschutz</span></div>
+        <div class="wizard-step-dot" data-step="2" onclick="goToWizardStep(2)"><span class="step-num">2</span><span class="step-label">Erkennungsmodus</span></div>
+        <div class="wizard-step-dot" data-step="3" onclick="goToWizardStep(3)"><span class="step-num">3</span><span class="step-label">Stärke &amp; Detailgrad</span></div>
+        <div class="wizard-step-dot" data-step="4" onclick="goToWizardStep(4)"><span class="step-num">4</span><span class="step-label">KI-Check &amp; Start</span></div>
+      </div>
+
+      <div class="wizard-body">
+        <div class="wizard-step-pane active" id="wizard-step-1">
+          <div class="wizard-hero-banner">
+            <div style="font-size: 2.8rem;">🛡️</div>
+            <div>
+              <div class="privacy-badge-tag">100% IM BROWSER • KEIN SERVER-UPLOAD</div>
+              <h3 style="font-size: 1.25rem; margin: 0.2rem 0;">Willkommen bei BlackMyData!</h3>
+              <p style="font-size: 0.875rem; color: var(--text-secondary);">
+                Alle PDF-Dokumente werden direkt in deinem Browser analysiert und physisch geschwärzt – kein Dokument wird jemals auf diesen Webserver hochgeladen.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="wizard-step-pane" id="wizard-step-2">
+          <div class="mode-cards-grid">
+            <div class="mode-card" data-recognition-mode="fast" onclick="setRecognitionMode('fast')">
+              <div class="mode-card-header"><span class="mode-icon">⚡</span><div><div class="mode-title">Schnelle Erkennung</div><div class="mode-subtitle">100% im Browser (~0.1s/Seite)</div></div></div>
+            </div>
+            <div class="mode-card active" data-recognition-mode="good" onclick="setRecognitionMode('good')">
+              <div class="mode-card-header"><span class="mode-icon">🧠</span><div><div class="mode-title">Gute / Gründliche Erkennung</div><div class="mode-subtitle">Kontext + Optionale Lokale KI</div></div></div>
+            </div>
+            <div class="mode-card" data-recognition-mode="precise" onclick="setRecognitionMode('precise')">
+              <div class="mode-card-header"><span class="mode-icon">🎯</span><div><div class="mode-title">Genaue OCR &amp; Vision-KI</div><div class="mode-subtitle">300 DPI + Sauvola + Deskew</div></div></div>
+            </div>
+          </div>
+
+          <h3 style="font-size: 1.05rem; margin-top: 1rem; margin-bottom: 0.5rem;">Erkennungs-Empfindlichkeit (5 Stufen)</h3>
+          <div class="strength-selector" style="margin-bottom: 0.5rem;">
+            <button type="button" class="strength-btn" data-sensitivity="minimal" onclick="setSensitivity('minimal')">
+              <span class="strength-icon">🟢</span><span class="strength-name">1: Minimal</span>
+            </button>
+            <button type="button" class="strength-btn" data-sensitivity="low" onclick="setSensitivity('low')">
+              <span class="strength-icon">🟢</span><span class="strength-name">2: Niedrig (Präzise)</span>
+            </button>
+            <button type="button" class="strength-btn active" data-sensitivity="balanced" onclick="setSensitivity('balanced')">
+              <span class="strength-icon">🟡</span><span class="strength-name">3: Standard</span>
+            </button>
+            <button type="button" class="strength-btn" data-sensitivity="high" onclick="setSensitivity('high')">
+              <span class="strength-icon">🟠</span><span class="strength-name">4: Hoch (Sensitiv)</span>
+            </button>
+            <button type="button" class="strength-btn" data-sensitivity="maximum" onclick="setSensitivity('maximum')">
+              <span class="strength-icon">🔴</span><span class="strength-name">5: Maximal</span>
+            </button>
+          </div>
+          <div style="font-size: 0.8rem; color: var(--text-secondary);">
+            <strong>Tipp:</strong> "Minimal" oder "Niedrig" filtert Rechnungsnummern (#...) und Produktcodes auf Rechnungen zuverlässig heraus, damit kein Ausweis-Fehlalarm entsteht.
+          </div>
+        </div>
+
+        <div class="wizard-step-pane" id="wizard-step-3">
+          <h3 style="font-size: 1.05rem; margin-bottom: 0.5rem;">1. Schwärzungsstärke wählen</h3>
+          <div class="strength-selector" style="margin-bottom: 1.25rem;">
+            <button type="button" class="strength-btn" data-strength="light" onclick="setRedactionStrength('light')"><span class="strength-icon">🔉</span><span class="strength-name">Leicht</span></button>
+            <button type="button" class="strength-btn active" data-strength="standard" onclick="setRedactionStrength('standard')"><span class="strength-icon">⚖️</span><span class="strength-name">Standard</span></button>
+            <button type="button" class="strength-btn" data-strength="strict" onclick="setRedactionStrength('strict')"><span class="strength-icon">🔒</span><span class="strength-name">Streng</span></button>
+            <button type="button" class="strength-btn" data-strength="maximum" onclick="setRedactionStrength('maximum')"><span class="strength-icon">🛡️</span><span class="strength-name">Maximal</span></button>
+          </div>
+          <h3 style="font-size: 1.05rem; margin-bottom: 0.5rem;">2. Kategorien-Detailgrad wählen</h3>
+          <div class="mode-cards-grid">
+            <div class="mode-card active" data-wizard-granularity="coarse" onclick="setCategoryGranularity('coarse')">
+              <div class="mode-card-header"><span class="mode-icon">📦</span><div><div class="mode-title">Grob (8 Hauptgruppen)</div></div></div>
+            </div>
+            <div class="mode-card" data-wizard-granularity="granular" onclick="setCategoryGranularity('granular')">
+              <div class="mode-card-header"><span class="mode-icon">🔬</span><div><div class="mode-title">Granular (15 Einzelkategorien)</div></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="wizard-step-pane" id="wizard-step-4">
+          <div class="wizard-ai-status-box">
+            <div class="wizard-ai-row">
+              <div><strong>⚡ Browser-Engine (PDF.js + Deutsche Kontexterkennung)</strong></div>
+              <span class="status-badge"><span class="badge-dot dot-green"></span> Immer bereit</span>
+            </div>
+            <div class="wizard-ai-row">
+              <div><strong>🦙 Lokales Ollama (127.0.0.1:11434)</strong></div>
+              <span id="wizardOllamaBadge" class="status-badge"><span class="badge-dot dot-yellow"></span> Optional</span>
+            </div>
+            <div class="wizard-ai-row">
+              <div><strong>🎸 Lokales LM Studio (127.0.0.1:1234)</strong></div>
+              <span id="wizardLmstudioBadge" class="status-badge"><span class="badge-dot dot-yellow"></span> Optional</span>
+            </div>
+            <div class="wizard-ai-row">
+              <div><strong>🍏 Lokales oMLX (127.0.0.1:1060)</strong></div>
+              <span id="wizardOmlxBadge" class="status-badge"><span class="badge-dot dot-yellow"></span> Optional</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="wizard-footer">
+        <button type="button" id="wizardPrevBtn" class="btn btn-secondary" onclick="prevWizardStep()" style="visibility: hidden;">← Zurück</button>
+        <div style="display: flex; gap: 0.5rem;">
+          <button type="button" id="wizardNextBtn" class="btn btn-primary" onclick="nextWizardStep()">Weiter →</button>
+          <button type="button" id="wizardFinishBtn" class="btn btn-success btn-lg" onclick="finishSetupWizard()" style="display: none;">✅ Einrichtung abschließen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Local Vendor Libraries (Self-Contained Browser-Edition) -->
+  <script src="./vendor/pdf.min.js?v=1.0.7"></script>
+  <script src="./vendor/pdf-lib.min.js?v=1.0.7"></script>
+  <script src="./vendor/jspdf.umd.min.js?v=1.0.7"></script>
+  <script src="./vendor/jszip.min.js?v=1.0.7"></script>
+  <script src="./vendor/tesseract.min.js?v=1.0.7"></script>
+  <!-- BlackMyData Client-Side OCR Utilities & PII Engine -->
+  <script src="./ocr_utils.js?v=1.0.7"></script>
+  <script src="./pii_engine.js?v=1.0.7"></script>
+  <script src="./strato_app.js?v=1.0.7"></script>
+</body>
+</html>

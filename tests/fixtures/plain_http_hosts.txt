@@ -1,0 +1,57 @@
+# Home-network rule for plain http:// (BMD-N10, code review BMD-R8). One case per line: "allow HOST" or "block HOST".
+# HOST is written as in a URL (IPv6 in brackets). Used by both implementations of the rule:
+#   tests/test_rules_and_export_safety.js   isPlainHttpAllowed in app/static/strato_app.js
+#   android/app/src/test/.../LocalNetworkTest.java   LocalNetwork.isPlainHttpAllowed in the Android app
+# Change the rule in both places and add the case here.
+
+# this device
+allow localhost
+allow LOCALHOST
+allow ollama.localhost
+allow 127.0.0.1
+allow 127.255.255.254
+allow [::1]
+
+# home network names
+allow studio.local
+allow nas.lan
+allow box.home.arpa
+allow gpu.tailnet-1234.ts.net
+
+# private IPv4 ranges, link-local, CGNAT (Tailscale)
+allow 10.0.0.1
+allow 10.255.255.255
+allow 192.168.1.5
+allow 172.16.0.1
+allow 172.31.255.255
+allow 169.254.10.20
+allow 100.64.0.1
+allow 100.127.255.255
+
+# IPv6 link-local and unique local
+allow [fe80::1]
+allow [fd12:3456::1]
+allow [fc00::1]
+
+# internet
+block example.com
+block api.openai.com
+block 8.8.8.8
+block 1.1.1.1
+block 172.15.0.1
+block 172.32.0.1
+block 192.169.0.1
+block 100.63.255.255
+block 100.128.0.1
+block 169.253.0.1
+block 11.0.0.1
+block [2001:4860:4860::8888]
+block [fe8::1]
+
+# look-alikes
+block fdomain.com
+block local
+block evil-local.com
+block localhost.example.com
+block mylan
+block ts.net.example.com

@@ -1,0 +1,112 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'de.juliandigitalproducts.blackmydata'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'de.juliandigitalproducts.blackmydata'
+        minSdk 26
+        targetSdk 35
+        versionCode 8
+        versionName '1.0.7'
+
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+    }
+
+    // Release signing (code review B8, same model as EV Trigger Flows/NotiToCal): BLACKMYDATA_KEYSTORE_* env vars or
+    // ../../blackmydata-release.keystore.properties next to the repositories. Without a key the release build
+    // stops instead of silently signing with the debug key (another debug-signed "update" could replace the app).
+    def keyProps = new Properties()
+    def keyPropsFile = rootProject.file('../../blackmydata-release.keystore.properties')
+    if (keyPropsFile.exists()) keyPropsFile.withInputStream { keyProps.load(it) }
+    def releaseStoreFile = System.getenv('BLACKMYDATA_KEYSTORE_FILE') ?: keyProps.getProperty('storeFile')
+    signingConfigs {
+        if (releaseStoreFile) {
+            release {
+                storeFile file(releaseStoreFile)
+                storePassword System.getenv('BLACKMYDATA_KEYSTORE_PASSWORD') ?: keyProps.getProperty('storePassword')
+                keyAlias System.getenv('BLACKMYDATA_KEY_ALIAS') ?: keyProps.getProperty('keyAlias')
+                keyPassword System.getenv('BLACKMYDATA_KEY_PASSWORD') ?: keyProps.getProperty('keyPassword')
+            }
+        }
+    }
+    if (!releaseStoreFile) {
+        gradle.taskGraph.whenReady { graph ->
+            if (graph.allTasks.any { it.name.contains('Release') && (it.name.startsWith('package') || it.name.startsWith('bundle')) }) {
+                throw new GradleException('No BlackMyData release key: set BLACKMYDATA_KEYSTORE_FILE/_PASSWORD, BLACKMYDATA_KEY_ALIAS/_PASSWORD or create ../../blackmydata-release.keystore.properties.')
+            }
+        }
+    }
+
+    // Release APKs carry the version in their name, e.g. BlackMyData-Android-1.0.1.apk.
+    applicationVariants.all { variant ->
+        if (variant.buildType.name == 'release') {
+            variant.outputs.all { outputFileName = "BlackMyData-Android-${variant.versionName}.apk" }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (releaseStoreFile) signingConfig signingConfigs.release
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    // The web app has one source: app/static. It is copied into the build at build time (no second copy in git).
+    sourceSets {
+        main {
+            assets.srcDirs = [layout.buildDirectory.dir('generated/webapp')]
+        }
+    }
+
+    // Unit tests share case lists with the web tests in ../tests (code review BMD-R8).
+    testOptions {
+        unitTests.all {
+            systemProperty 'bmd.repoRoot', rootProject.file('..').absolutePath
+            inputs.dir(rootProject.file('../tests/fixtures'))
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.7.1'
+    implementation 'androidx.webkit:webkit:1.14.0'
+    testImplementation 'junit:junit:4.13.2'
+}
+
+configurations.all {
+    exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'
+    exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'
+}
+
+
+// Copies app/static (the only place to edit the web app) into the assets of the build. Server-only files
+// (.htaccess, index.php) and uncompressed language data stay out. CURRENT_BUILD_VERSION in strato_app.js and the
+// ?v= cache busters in index.html get this build's versionName (BMD-N3: one version source, so the app shows the APK
+// version and clears its caches after an update; tools/version.sh does the same for web and desktop).
+def appVersionName = android.defaultConfig.versionName
+def copyWebApp = tasks.register('copyWebApp', Sync) {
+    inputs.property('appVersionName', appVersionName)
+    from(rootProject.file('../app/static')) {
+        exclude '.htaccess', 'index.php', '**/.DS_Store', '**/*.traineddata'
+    }
+    filesMatching('strato_app.js') {
+        filter { String line ->
+            line.startsWith('const CURRENT_BUILD_VERSION = ') ? "const CURRENT_BUILD_VERSION = \"${appVersionName}\";".toString() : line
+        }
+    }
+    filesMatching('index.html') {   // cache busters ?v=X.Y.Z
+        filter { String line -> line.replaceAll(/\?v=\d+\.\d+\.\d+"/, "?v=${appVersionName}\"") }
+    }
+    into layout.buildDirectory.dir('generated/webapp')
+}
+tasks.named('preBuild') { dependsOn copyWebApp }
