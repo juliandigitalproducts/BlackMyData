@@ -7,8 +7,8 @@
        connect-src http/https: the optional AI server the user configures (usually in the own network). -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' http: https: blob: data:; object-src 'none'; base-uri 'self'; form-action 'none'" />
   <title>BlackMyData – DSGVO PDF-Schwärzung (100% im Browser &amp; Optionale Lokale KI)</title>
-  <link rel="icon" type="image/svg+xml" href="./icon.svg?v=1.0.7" />
-  <link rel="stylesheet" href="./style.css?v=1.0.7" />
+  <link rel="icon" type="image/svg+xml" href="./icon.svg?v=1.0.8" />
+  <link rel="stylesheet" href="./style.css?v=1.0.8" />
 </head>
 <body>
 
@@ -934,7 +934,7 @@
             <div class="pg-icon">🌐</div>
             <div>
               <strong>Modus 1: 100% im Browser (Überall sofort nutzbar)</strong>
-              <p>Dank <code>PDF.js</code>, unserer deutschen PII- &amp; Kontexterkennung und <code>jsPDF</code> läuft das Analysieren und echte physische Schwärzen komplett im Browser – ganz ohne lokalen Server auf jedem Mac, Windows-PC oder Tablet!</p>
+              <p>Dank <code>PDF.js</code>, unserer deutschen PII- &amp; Kontexterkennung und <code>pdf-lib</code> läuft das Analysieren und echte physische Schwärzen komplett im Browser – ganz ohne lokalen Server auf jedem Mac, Windows-PC oder Tablet!</p>
             </div>
           </div>
 
@@ -1000,9 +1000,10 @@
           </table>
         </div>
         <details id="licenseTextsDetails" style="margin-top: 1rem;">
-          <summary>📄 Vollständige Lizenztexte anzeigen (MIT-Lizenz von BlackMyData, Hinweise der Fremdkomponenten, Apache-2.0)</summary>
+          <summary>📄 Vollständige Lizenztexte anzeigen (GNU GPL v3 von BlackMyData mit Zusatzbedingungen, Hinweise der Fremdkomponenten, Apache-2.0)</summary>
+          <p style="font-size: 0.85rem; color: var(--text-secondary);">BlackMyData ist freie Software unter der <strong>GNU General Public License, Version 3 oder später (GPL-3.0-or-later)</strong>, mit Zusatzbedingungen nach § 7 GPLv3 (Marken). Versionen bis einschließlich v1.0.7 wurden unter der MIT-Lizenz veröffentlicht. Die Namen „BlackMyData“ und „Julian Digital Products“, Logos und Icons sind nicht mitlizenziert; veränderte Versionen müssen einen anderen Namen und andere Icons tragen. Es gibt keinerlei Gewährleistung (§§ 15–16 GPLv3).</p>
           <pre id="licenseTextsPre" style="white-space: pre-wrap; max-height: 24rem; overflow: auto; font-size: 0.75rem;">Wird geladen…</pre>
-          <p style="font-size: 0.8rem; color: var(--text-secondary);">Dateien: <a href="licenses/THIRD_PARTY_NOTICES.txt" target="_blank" rel="noopener">licenses/THIRD_PARTY_NOTICES.txt</a> · <a href="licenses/Apache-2.0.txt" target="_blank" rel="noopener">licenses/Apache-2.0.txt</a> · <a href="licenses/LICENSE.txt" target="_blank" rel="noopener">licenses/LICENSE.txt</a></p>
+          <p style="font-size: 0.8rem; color: var(--text-secondary);">Dateien: <a href="licenses/THIRD_PARTY_NOTICES.txt" target="_blank" rel="noopener">licenses/THIRD_PARTY_NOTICES.txt</a> · <a href="licenses/Apache-2.0.txt" target="_blank" rel="noopener">licenses/Apache-2.0.txt</a> · <a href="licenses/LICENSE.txt" target="_blank" rel="noopener">licenses/LICENSE.txt</a> (GPL-3.0) · <a href="licenses/LICENSE-EXCEPTIONS.txt" target="_blank" rel="noopener">licenses/LICENSE-EXCEPTIONS.txt</a></p>
         </details>
       </div>
     </section>
@@ -1518,14 +1519,13 @@
   <div id="toastContainer" class="toast-container"></div>
 
   <!-- Local Vendor Libraries (Self-Contained Browser-Edition) -->
-  <script src="./vendor/pdf.min.js?v=1.0.7"></script>
-  <script src="./vendor/pdf-lib.min.js?v=1.0.7"></script>
-  <script src="./vendor/jspdf.umd.min.js?v=1.0.7"></script>
-  <script src="./vendor/jszip.min.js?v=1.0.7"></script>
-  <script src="./vendor/tesseract.min.js?v=1.0.7"></script>
+  <script src="./vendor/pdf.min.js?v=1.0.8"></script>
+  <script src="./vendor/pdf-lib.min.js?v=1.0.8"></script>
+  <script src="./vendor/jszip.min.js?v=1.0.8"></script>
+  <script src="./vendor/tesseract.min.js?v=1.0.8"></script>
   <!-- BlackMyData Client-Side OCR Utilities & PII Engine -->
-  <script src="./ocr_utils.js?v=1.0.7"></script>
-  <script src="./pii_engine.js?v=1.0.7"></script>
-  <script src="./strato_app.js?v=1.0.7"></script>
+  <script src="./ocr_utils.js?v=1.0.8"></script>
+  <script src="./pii_engine.js?v=1.0.8"></script>
+  <script src="./strato_app.js?v=1.0.8"></script>
 </body>
 </html>

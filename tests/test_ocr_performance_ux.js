@@ -1,4 +1,7 @@
 /**
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2026 Julian Digital Products
+ *
  * BlackMyData – Comprehensive Cross-Browser, OCR Performance & UX Verification Suite
  */
 const fs = require('fs');

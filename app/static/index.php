@@ -1,4 +1,6 @@
 <?php
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Julian Digital Products
 declare(strict_types=1);
 // Entry point of a web app behind the AIO gate (/gate/). Copied as run/index.php into every app; the app id is
 // the parent folder name (aiomm, blackmydata). Without a valid pass the visitor is sent to the check page. Every

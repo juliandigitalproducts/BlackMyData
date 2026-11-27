@@ -1,9 +1,12 @@
 # Third-Party Licenses & Notices – BlackMyData
 
-BlackMyData is licensed under the MIT License (© 2026 juliandigitalproducts), see [LICENSE](LICENSE).
+BlackMyData is licensed under the GNU General Public License v3.0 or later (GPL-3.0-or-later, © 2026 Julian Digital Products),
+see [LICENSE](LICENSE), with additional terms under section 7 (trademarks) in [LICENSE-EXCEPTIONS.md](LICENSE-EXCEPTIONS.md).
+Versions up to and including v1.0.7 were released under the MIT License. All third-party components below are under
+GPLv3-compatible licenses.
 
 The full license texts and copyright notices of all components below are in
-[`app/static/licenses/`](app/static/licenses/) (`THIRD_PARTY_NOTICES.txt`, `Apache-2.0.txt`, `LICENSE.txt`).
+[`app/static/licenses/`](app/static/licenses/) (`THIRD_PARTY_NOTICES.txt`, `Apache-2.0.txt`, `LICENSE.txt` = GPL-3.0, `LICENSE-EXCEPTIONS.txt`).
 That folder is part of every package: Android APK (assets), Windows setup and portable ZIP, macOS app, Linux tar.gz
 and .deb (also as `/usr/share/doc/blackmydata/copyright`) and the web app. In the app it is shown under
 "Datenschutz, Architektur & Lizenzen". All components are redistributed unchanged.
@@ -23,8 +26,9 @@ and .deb (also as `/usr/share/doc/blackmydata/copyright`) and the web app. In th
 | ↳ contains libpng | – | PNG Reference Library License v2 | © 1995-2026 The PNG Reference Library Authors |
 | ↳ contains zlib | 1.2.12 | Zlib | © 1995-2022 Jean-loup Gailly and Mark Adler |
 | ↳ contains libtiff | – | libtiff license | © 1988-1997 Sam Leffler, © 1991-1997 Silicon Graphics, Inc. |
+| ↳ contains libjpeg (IJG) | 9a | IJG License (this software is based in part on the work of the Independent JPEG Group.) | © 2014 Thomas G. Lane, Guido Vollbeding |
+| ↳ contains libwebp | – | BSD-3-Clause | © Google Inc. |
 | Tesseract language data (`deu.traineddata.gz`, `eng.traineddata.gz`, tessdata_fast) | 4.0.0 | Apache-2.0 | Google LLC and Tesseract OCR contributors |
-| jsPDF (`jspdf.umd.min.js`) | 2.5.1 | MIT (bundled parts: see `@license` comments in the file) | © 2010-2021 James Hall, 2015-2021 yWorks GmbH |
 | pdf-lib (`pdf-lib.min.js`) | 1.17.1 | MIT | © 2019 Andrew Dillon |
 | ↳ bundled: @pdf-lib/standard-fonts | 1.0.0 | MIT | © 2018 Andrew Dillon |
 | ↳ bundled: @pdf-lib/upng | 1.0.1 | MIT | © 2017 Photopea |
@@ -48,6 +52,8 @@ and .deb (also as `/usr/share/doc/blackmydata/copyright`) and the web app. In th
 
 ## 4. Not distributed
 
-* **Local AI bridges (Ollama, LM Studio, oMLX):** BlackMyData's own code (MIT). It talks over HTTP to software the user
+* **Local AI bridges (Ollama, LM Studio, oMLX):** BlackMyData's own code (GPL-3.0-or-later). It talks over HTTP to software the user
   installs separately; that software and its models are not part of BlackMyData.
+* **jsPDF** (and the md5.js bundled in it, whose license was unclear) was removed after v1.0.7; pdf-lib now
+  writes all PDFs.
 * **Build and test tools** (Gradle wrapper, playwright-core, JUnit, NSIS) are not shipped in the packages.

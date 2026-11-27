@@ -30,6 +30,7 @@ tools/version.sh --stamp "$OUT/web/strato_app.js" "$OUT/web/index.html"
 rsync -a --exclude '*.traineddata' --exclude '.DS_Store' app/static/vendor/ "$OUT/web/vendor/"
 rsync -a --exclude '.DS_Store' app/static/licenses/ "$OUT/web/licenses/"   # LICENSE, third-party notices
 cp app/static/licenses/LICENSE.txt "$OUT/LICENSE.txt"
+cp app/static/licenses/LICENSE-EXCEPTIONS.txt "$OUT/LICENSE-EXCEPTIONS.txt"
 cp app/static/licenses/THIRD_PARTY_NOTICES.txt "$OUT/THIRD_PARTY_NOTICES.txt"
 
 # Exec: field codes like %k must not stand inside quotes (Desktop Entry spec, BMD-N12); it is passed to sh as $1.
@@ -69,7 +70,9 @@ geschlossen wird. Dokumente und sensible Daten verlassen den Computer zu 100% ni
 
 Einstellungen & Cache: ~/.local/share/BlackMyData (oder \$XDG_DATA_HOME/BlackMyData).
 
-Lizenzen: LICENSE.txt (MIT) und THIRD_PARTY_NOTICES.txt; Volltexte auch in web/licenses/.
+Lizenz: GNU GPL v3 oder später (LICENSE.txt) mit Zusatzbedingungen nach Abschnitt 7
+(Marken, LICENSE-EXCEPTIONS.txt); Versionen bis einschließlich v1.0.7: MIT.
+Fremdkomponenten: THIRD_PARTY_NOTICES.txt; Volltexte auch in web/licenses/.
 TXT
 
 (cd dist && tar -czf "BlackMyData-Linux-Portable-$VERSION.tar.gz" BlackMyData-Linux-Portable)
@@ -86,7 +89,7 @@ docker run --rm -v "$PWD:/src" -w /src "$DEB_IMAGE" bash -c "
   cp -r dist/BlackMyData-Linux-Portable/web /tmp/deb/opt/blackmydata/
   cp app/static/icon.svg /tmp/deb/usr/share/icons/hicolor/scalable/apps/blackmydata.svg
   mkdir -p /tmp/deb/usr/share/doc/blackmydata
-  cat app/static/licenses/LICENSE.txt app/static/licenses/THIRD_PARTY_NOTICES.txt app/static/licenses/Apache-2.0.txt > /tmp/deb/usr/share/doc/blackmydata/copyright
+  cat app/static/licenses/LICENSE.txt app/static/licenses/LICENSE-EXCEPTIONS.txt app/static/licenses/THIRD_PARTY_NOTICES.txt app/static/licenses/Apache-2.0.txt > /tmp/deb/usr/share/doc/blackmydata/copyright
   
   cat > /tmp/deb/usr/bin/blackmydata << 'SH'
 #!/usr/bin/env bash

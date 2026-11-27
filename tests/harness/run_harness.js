@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Julian Digital Products
 // Redaction harness: generates a corpus of test PDFs (tests/harness/corpus.js), runs each one through the real
 // pipeline of the web app (upload → analysis → physical redaction → export) in headless Chrome, and checks the export:
 // no personal data in the text layer, OCR of the rendered pages, annotations, metadata/XMP, attachments, raw PDF

@@ -1,4 +1,6 @@
 <?php
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Julian Digital Products
 declare(strict_types=1);
 require __DIR__ . '/../gate/lib.php';
 if (isset($_GET['asset'])) {

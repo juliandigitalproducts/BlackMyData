@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Julian Digital Products
 // Browser E2E test of the web app, driven through the UI like a user (desktop 1280 px and phone 412 px):
 // close the first-start wizard, pick a PDF via the drop zone's file chooser, open "Vorschau & Detailprüfung" (runs the
 // analysis), check the hit list (incl. a form field value), switch a hit off and on, change page, then

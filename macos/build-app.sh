@@ -35,7 +35,7 @@ for f in strato_app.js index.html; do   # same as tools/version.sh --stamp, but 
     -e "s/\?v=[0-9]+\.[0-9]+\.[0-9]+\"/?v=$VERSION\"/g" "app/static/$f" > "$APP/Contents/Resources/web/$f"
 done
 cp -R app/static/vendor "$APP/Contents/Resources/web/vendor"
-cp -R app/static/licenses "$APP/Contents/Resources/web/licenses"   # LICENSE, third-party notices, Apache-2.0 text
+cp -R app/static/licenses "$APP/Contents/Resources/web/licenses"   # LICENSE (GPL-3.0), LICENSE-EXCEPTIONS, third-party notices, Apache-2.0 text
 rm -f "$APP"/Contents/Resources/web/vendor/*.traineddata  # only the .gz files are used (B19)
 find "$APP" -name .DS_Store -delete
 

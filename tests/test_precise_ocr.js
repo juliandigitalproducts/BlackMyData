@@ -1,4 +1,7 @@
 /**
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2026 Julian Digital Products
+ *
  * BlackMyData – Automated Release Verification Suite
  * Verifies: High-Precision OCR Pipeline (300 DPI, Sauvola, Deskew), ocr_utils.js,
  * Fuzzy Token Matching, Text-AI Chunking & Mac-Engine Bridge, Vision-KI.

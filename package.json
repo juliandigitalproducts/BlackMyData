@@ -1,6 +1,7 @@
 {
   "name": "blackmydata",
   "private": true,
+  "license": "GPL-3.0-or-later",
   "description": "BlackMyData – Schwärzung von PDFs im Browser. Tests der Web-Engine (code review B34).",
   "scripts": {
     "sync": "tools/sync_web.sh",

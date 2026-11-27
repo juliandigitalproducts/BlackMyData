@@ -1,4 +1,7 @@
 /**
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2026 Julian Digital Products
+ *
  * BlackMyData – Comprehensive Cross-Browser & Stability Verification Test Suite
  * Tests:
  * 1. Text-based PDF: Sensitivity level 1 vs 3 vs 5 (PII detection & progression)

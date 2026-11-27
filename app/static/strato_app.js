@@ -1,6 +1,9 @@
 /**
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2026 Julian Digital Products
+ *
  * BlackMyData - Dual-Mode Browser & Local-AI WebApp Controller
- * - Mode 1: 100% Browser-Standalone (PDF.js + German PII Engine + jsPDF Physical Redaction + JSZip)
+ * - Mode 1: 100% Browser-Standalone (PDF.js + German PII Engine + pdf-lib Physical Redaction + JSZip)
  * - Mode 2: Direct Bridge to Localhost 127.0.0.1 (Ollama :11434, LM Studio :1234, oMLX :1060) or Remote LAN AI Server
  */
 
@@ -55,7 +58,7 @@ window.addEventListener("unhandledrejection", (event) => {
 
 // One version source (BMD-N3): every build writes versionName from android/app/build.gradle here (Gradle copyWebApp,
 // tools/version.sh --stamp). The literal is only the fallback for running app/static directly.
-const CURRENT_BUILD_VERSION = "1.0.7";
+const CURRENT_BUILD_VERSION = "1.0.8";
 
 // Visible version labels (<span class="app-version">) always show the build version, never a stale literal.
 // The script loads at the end of <body>, so the elements already exist.
@@ -170,17 +173,16 @@ const STRENGTH_DESCRIPTIONS = {
 
 const DEFAULT_OPEN_SOURCE_PACKAGES = [
   { name: "PDF.js (Mozilla)", version: "3.11.174", license: "Apache-2.0", purpose: "100% Client-Side PDF-Parsing, Wort-Koordinaten & Seiten-Rendering direkt im Browser" },
-  { name: "pdf-lib (inkl. pako, tslib, @pdf-lib/standard-fonts, @pdf-lib/upng)", version: "1.17.1", license: "MIT (pako: MIT/Zlib, tslib: 0BSD)", purpose: "Vektor-Kopie von PDF-Seiten und Zusammenbau der geschwärzten PDFs" },
-  { name: "jsPDF", version: "2.5.1", license: "MIT License", purpose: "Erzeugung physisch geschwärzter, vektorbereinigter PDF-Dokumente im Browser-Speicher" },
-  { name: "Tesseract.js (WASM)", version: "5.1.1", license: "Apache-2.0", purpose: "Optionale Browser-basierte optische Texterkennung (OCR) für gescannte PDFs; tesseract.js-core enthält Leptonica, libpng, zlib und libtiff (BSD-artige Lizenzen)" },
+  { name: "pdf-lib (inkl. pako, tslib, @pdf-lib/standard-fonts, @pdf-lib/upng)", version: "1.17.1", license: "MIT (pako: MIT/Zlib, tslib: 0BSD)", purpose: "Vektor-Kopie von PDF-Seiten, Zusammenbau der physisch geschwärzten PDFs und Umwandlung importierter Bilder in PDF" },
+  { name: "Tesseract.js (WASM)", version: "5.1.1", license: "Apache-2.0 (Core: BSD/IJG/…)", purpose: "Optionale Browser-basierte optische Texterkennung (OCR) für gescannte PDFs; tesseract.js-core enthält Leptonica, libpng, zlib, libtiff, libjpeg 9a (IJG, © 2014 Thomas G. Lane, Guido Vollbeding – this software is based in part on the work of the Independent JPEG Group.) und libwebp (BSD-3-Clause, © Google Inc.)" },
   { name: "Tesseract OCR traineddata (deu, eng)", version: "4.0.0 Fast", license: "Apache-2.0", purpose: "Deutsche & englische OCR-Sprachmodelle © Google LLC / Tesseract contributors" },
   { name: "JSZip", version: "3.10.1", license: "MIT License", purpose: "Lokaler ZIP-Sammeldownload bei Stapelverarbeitung mehrerer PDFs" },
-  { name: "BlackMyData PII-Engine (JS)", version: "1.4.0", license: "MIT", purpose: "Deutsche Vor-/Nachnamen-, Polysem- (Rose/Winter/Schwarz/Wolf) & Kontexterkennung" },
-  { name: "Ollama Localhost Bridge", version: "Port 11434", license: "MIT (eigener Code)", purpose: "Wird nicht mitgeliefert, nur angesprochen: Optionale direkte Verbindung (127.0.0.1:11434 oder LAN) zu lokalem Ollama LLM" },
-  { name: "LM Studio OpenAI Bridge", version: "Port 1234", license: "MIT (eigener Code)", purpose: "Wird nicht mitgeliefert, nur angesprochen: Optionale direkte Verbindung (127.0.0.1:1234 oder LAN) zu LM Studio Server" },
+  { name: "BlackMyData PII-Engine (JS)", version: "1.4.0", license: "GPL-3.0-or-later (eigener Code)", purpose: "Deutsche Vor-/Nachnamen-, Polysem- (Rose/Winter/Schwarz/Wolf) & Kontexterkennung" },
+  { name: "Ollama Localhost Bridge", version: "Port 11434", license: "GPL-3.0-or-later (eigener Code)", purpose: "Wird nicht mitgeliefert, nur angesprochen: Optionale direkte Verbindung (127.0.0.1:11434 oder LAN) zu lokalem Ollama LLM" },
+  { name: "LM Studio OpenAI Bridge", version: "Port 1234", license: "GPL-3.0-or-later (eigener Code)", purpose: "Wird nicht mitgeliefert, nur angesprochen: Optionale direkte Verbindung (127.0.0.1:1234 oder LAN) zu LM Studio Server" },
   { name: "AndroidX, Kotlin-Standardbibliothek, kotlinx-coroutines (nur Android-App)", version: "div.", license: "Apache-2.0", purpose: "WebView-Hülle der Android-App" },
   { name: "Go-Standardbibliothek (nur Windows-/Linux-Starter)", version: "Go", license: "BSD-3-Clause", purpose: "Lokaler Starter, der die App auf 127.0.0.1 bereitstellt" },
-  { name: "oMLX Localhost Bridge", version: "Port 1060", license: "MIT (eigener Code)", purpose: "Wird nicht mitgeliefert, nur angesprochen: Optionale direkte Loopback-Verbindung (127.0.0.1:1060) zu Apple Silicon oMLX" }
+  { name: "oMLX Localhost Bridge", version: "Port 1060", license: "GPL-3.0-or-later (eigener Code)", purpose: "Wird nicht mitgeliefert, nur angesprochen: Optionale direkte Loopback-Verbindung (127.0.0.1:1060) zu Apple Silicon oMLX" }
 ];
 
 // Model Advisor Profiles (Default: 12 GB VRAM)
@@ -3392,7 +3394,11 @@ if (typeof document !== "undefined" && !CAN_DECODE_TIFF) {
 }
 
 async function convertImageFileToPdfBytes(imageFile) {
-  return new Promise((resolve, reject) => {
+  // Image import: decode via <img>, flatten onto white (alpha), re-encode as JPEG and wrap it in a one-page PDF
+  // with pdf-lib (page size = image size in pt).
+  const PDFLib = (typeof window !== "undefined" && window.PDFLib) ? window.PDFLib : null;
+  if (!PDFLib) throw new Error("pdf-lib ist nicht geladen");
+  const jpgBytes = await new Promise((resolve, reject) => {
     const img = new Image();
     const objectUrl = URL.createObjectURL(imageFile);
     img.onload = () => {
@@ -3408,18 +3414,15 @@ async function convertImageFileToPdfBytes(imageFile) {
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(0, 0, width, height);
         ctx.drawImage(img, 0, 0);
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
-
-        const { jsPDF } = window.jspdf;
-        const orientation = width > height ? "l" : "p";
-        const pdf = new jsPDF({
-          orientation,
-          unit: "pt",
-          format: [width, height]
-        });
-        pdf.addImage(dataUrl, "JPEG", 0, 0, width, height);
-        const arrayBuffer = pdf.output("arraybuffer");
-        resolve(arrayBuffer);
+        canvas.toBlob((blob) => {
+          canvas.width = 0;
+          canvas.height = 0;
+          if (!blob) {
+            reject(new Error("Canvas toBlob fehlgeschlagen"));
+            return;
+          }
+          blob.arrayBuffer().then((buf) => resolve({ bytes: new Uint8Array(buf), width, height })).catch(reject);
+        }, "image/jpeg", 0.95);
       } catch (err) {
         reject(err);
       }
@@ -3430,6 +3433,14 @@ async function convertImageFileToPdfBytes(imageFile) {
     };
     img.src = objectUrl;
   });
+  const pdfDoc = await PDFLib.PDFDocument.create();
+  const embedded = await pdfDoc.embedJpg(jpgBytes.bytes);
+  const page = pdfDoc.addPage([jpgBytes.width, jpgBytes.height]);
+  page.drawImage(embedded, { x: 0, y: 0, width: jpgBytes.width, height: jpgBytes.height });
+  pdfDoc.setProducer("blackMyData");
+  pdfDoc.setCreator("blackMyData");
+  const bytes = await pdfDoc.save({ updateMetadata: false });
+  return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
 }
 
 async function handleFilesUpload(fileList) {
@@ -3901,107 +3912,8 @@ async function buildPhysicallyRedactedPdfBlob(file) {
     return { blob, totalRedactedBoxes };
   }
 
-  // Fallback to jsPDF if pdf-lib is unavailable (with OOM protection)
-  const { jsPDF } = window.jspdf;
-  let pdfOut = null;
-
-  for (let p = 0; p < file.pages_count; p++) {
-    setLoadingPhase(4, {
-      progressPct: Math.round(35 + ((p + 1) / file.pages_count) * 60),
-      subtitle: `Physische Schwärzung & Vektor-Bereinigung auf Seite ${p + 1} von ${file.pages_count}...`
-    });
-
-    const page = await file.pdfDoc.getPage(p + 1);
-    const ptViewport = page.getViewport({ scale: 1.0 });
-    const burnScale = getSafeRenderScale(ptViewport.width, ptViewport.height, 2.0, 3200);
-    const burnViewport = page.getViewport({ scale: burnScale });
-
-    const offCanvas = document.createElement("canvas");
-    offCanvas.width = Math.round(burnViewport.width);
-    offCanvas.height = Math.round(burnViewport.height);
-    const ctx = offCanvas.getContext("2d");
-
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, offCanvas.width, offCanvas.height);
-
-    await page.render({ canvasContext: ctx, viewport: burnViewport }).promise;
-
-    const pageEntities = getPageEntities(file, p);
-    const boxesToBurn = [];
-
-    for (const ent of pageEntities) {
-      if (excludedSet.has(ent.id)) continue;
-      for (const r of ent.rects || []) {
-        boxesToBurn.push({ rect: r, label: customLabel.replace("{CATEGORY}", formatCategoryLabel(ent.category)) });
-      }
-    }
-
-    const manualList = file.manualRedactions?.[p] || file.manualRedactions?.[String(p)] || [];
-    for (const mr of manualList) {
-      boxesToBurn.push({ rect: mr, label: customLabel.replace("{CATEGORY}", "MANUELL") });
-    }
-
-    const fallbackInfo = (file.pageContents || [])[p] || {};
-    if (fallbackInfo.ocrStatus === "failed" || fallbackInfo.ocrStatus === "unavailable") {
-      // K1: unknown content after a failed OCR – the whole page is blacked out.
-      ctx.fillStyle = fillColor;
-      ctx.fillRect(0, 0, offCanvas.width, offCanvas.height);
-      totalRedactedBoxes++;
-      boxesToBurn.length = 0;
-    }
-    for (const item of boxesToBurn) {
-      const [x0, y0, x1, y1] = item.rect;
-      const rx = Math.max(0, (x0 - padX) * burnScale);
-      const ry = Math.max(0, (y0 - padPt) * burnScale);
-      const rw = Math.min(offCanvas.width - rx, (x1 - x0 + padX * 2) * burnScale);
-      const rh = Math.min(offCanvas.height - ry, (y1 - y0 + padPt * 2) * burnScale);
-
-      ctx.fillStyle = fillColor;
-      ctx.fillRect(rx, ry, rw, rh);
-
-      if (addLabel && rw > 28 && rh > 8) {
-        ctx.fillStyle = "#ffffff";
-        const fontPx = Math.max(7, Math.min(13, Math.floor(rh * 0.65)));
-        ctx.font = `bold ${fontPx}px sans-serif`;
-        ctx.textBaseline = "middle";
-        ctx.fillText(item.label, rx + 3, ry + rh / 2, rw - 6);
-      }
-      totalRedactedBoxes++;
-    }
-
-    const imgDataUrl = offCanvas.toDataURL("image/jpeg", 0.92);
-    // Free canvas backing memory to prevent OOM
-    offCanvas.width = 0;
-    offCanvas.height = 0;
-
-    const orientation = ptViewport.width > ptViewport.height ? "l" : "p";
-
-    if (p === 0) {
-      pdfOut = new jsPDF({
-        orientation,
-        unit: "pt",
-        format: [ptViewport.width, ptViewport.height],
-        compress: true
-      });
-    } else {
-      pdfOut.addPage([ptViewport.width, ptViewport.height], orientation);
-    }
-
-    pdfOut.addImage(imgDataUrl, "JPEG", 0, 0, ptViewport.width, ptViewport.height, undefined, "FAST");
-  }
-
-  if (pdfOut.setProperties) {
-    pdfOut.setProperties({
-      title: "",
-      subject: "",
-      author: "",
-      keywords: "",
-      creator: "blackMyData"
-    });
-  }
-
-  const blob = pdfOut.output("blob");
-  return { blob, totalRedactedBoxes };
+  // pdf-lib is the only PDF writer (jsPDF was removed with the switch to GPL-3.0-or-later).
+  throw new Error("pdf-lib ist nicht geladen – die geschwärzte PDF kann nicht erzeugt werden.");
 }
 
 async function redactSingleFile(fileId, triggerDownload = true) {
@@ -5239,12 +5151,12 @@ function loadAboutAndPackages() {
     details.addEventListener("toggle", async () => {
       if (!details.open || pre.dataset.loaded) return;
       try {
-        const parts = await Promise.all(["licenses/LICENSE.txt", "licenses/THIRD_PARTY_NOTICES.txt", "licenses/Apache-2.0.txt"]
+        const parts = await Promise.all(["licenses/LICENSE-EXCEPTIONS.txt", "licenses/LICENSE.txt", "licenses/THIRD_PARTY_NOTICES.txt", "licenses/Apache-2.0.txt"]
           .map((u) => fetch(u).then((r) => { if (!r.ok) throw new Error(u); return r.text(); })));
         pre.textContent = parts.join("\n\n" + "=".repeat(78) + "\n\n");
         pre.dataset.loaded = "1";
       } catch (e) {
-        pre.textContent = "Die Lizenztexte liegen im Programmordner unter web/licenses/ (LICENSE.txt, THIRD_PARTY_NOTICES.txt, Apache-2.0.txt).";
+        pre.textContent = "Die Lizenztexte liegen im Programmordner unter web/licenses/ (LICENSE.txt = GPL-3.0, LICENSE-EXCEPTIONS.txt, THIRD_PARTY_NOTICES.txt, Apache-2.0.txt).";
       }
     });
   }

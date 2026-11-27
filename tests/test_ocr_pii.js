@@ -1,4 +1,7 @@
 /**
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2026 Julian Digital Products
+ *
  * BlackMyData – PII rules and OCR layout helpers of the web engine (app/static), version independent.
  * Same cases as AIOMM (AllInOneMediaManager/codebase/src/lib/services/ocrPii.test.ts) plus the false positives of the
  * code review 2026-11-03 (B5 addresses, B27 BIC). Run: node tests/test_ocr_pii.js (or npm test).

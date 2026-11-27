@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Julian Digital Products
+
 // Current build version from strato_app.js and a numeric semver comparison (B34: "1.10.0" > "1.5.0").
 const fs = require("fs");
 const path = require("path");

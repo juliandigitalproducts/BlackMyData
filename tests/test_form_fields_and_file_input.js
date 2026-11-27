@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Julian Digital Products
+
 // Fixes of the 20 Nov 2026 review, tested against the real functions of strato_app.js (in a VM):
 // - form field values and FreeText comments are checked for personal data (they are drawn into the export image)
 // - picking the same file again after removing it loads it again (the file input is emptied after each pick)

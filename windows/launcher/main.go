@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Julian Digital Products
+
 // BlackMyData for Windows: starts the web app without installation of anything else.
 //
 // The launcher serves the app folder ("web" next to the exe) on http://127.0.0.1:47811 – reachable only from this

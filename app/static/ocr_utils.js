@@ -1,4 +1,7 @@
 /**
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2026 Julian Digital Products
+ *
  * BlackMyData - High-Precision OCR & Image Processing Utilities (v1.5.0)
  * Core algorithms: Sauvola Binarization, Contrast Stretching, Projection-Profile Deskew,
  * Box-Rotation & Coordinate Transform, Levenshtein Distance & Fuzzy Matching, IoU.

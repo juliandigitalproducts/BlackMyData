@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Julian Digital Products
+
 // Fixes after the emulator test of 20 Nov 2026 (reports/emu/BlackMyData-emulator-test.md), tested against the real
 // functions of strato_app.js / pii_engine.js (in a VM):
 // - B-E3: Back from the editor returns to the document list (tab "batch"), it left an empty page ("queue")

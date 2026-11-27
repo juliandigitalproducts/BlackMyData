@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Julian Digital Products
+
 // Test PDFs of the redaction harness, generated with pdf-lib (fictitious people and numbers only).
 // Each case lists the personal data that must not be found anywhere in the export (`needles`) and, separately,
 // known gaps of the rules (`knownGaps`, review 20.11.2026 finding 2) that are reported but do not fail the run.

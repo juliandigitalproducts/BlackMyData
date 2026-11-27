@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Julian Digital Products
+
 // Shared helpers of the redaction harness (tests/harness) and the browser E2E test (tests/e2e):
 // a local static server for app/static, a headless Chrome with a network guard, and the output check.
 "use strict";

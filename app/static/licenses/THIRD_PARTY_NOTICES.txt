@@ -1,8 +1,11 @@
 BlackMyData – Third-party licenses and notices
 ==============================================
 
-BlackMyData itself is licensed under the MIT License (Copyright (c) 2026
-juliandigitalproducts), see LICENSE. The program contains the following
+BlackMyData itself is licensed under the GNU General Public License, version 3
+or (at your option) any later version (GPL-3.0-or-later), Copyright (C) 2026
+Julian Digital Products, see LICENSE.txt, with additional terms under section 7
+(trademarks/brand features) in LICENSE-EXCEPTIONS.txt. Versions up to and
+including v1.0.7 were released under the MIT License. The program contains the following
 third-party components. Each is redistributed unchanged under its own license.
 Not every component is part of every package (Android-only and desktop-only
 parts are marked).
@@ -32,7 +35,7 @@ tesseract.js-core 5.x (tesseract-core-*.wasm.js), Tesseract OCR engine
 
 Copyright Tesseract OCR contributors / Google LLC
 Apache License 2.0 – full text: Apache-2.0.txt (in this folder).
-tesseract.js-core contains Leptonica, libpng, zlib and libtiff (notices below).
+tesseract.js-core contains Leptonica, libpng, zlib, libtiff, libjpeg (IJG) and libwebp (notices below).
 
 ------------------------------------------------------------------------------
 Tesseract OCR language data (deu.traineddata.gz, eng.traineddata.gz, tessdata_fast 4.0.0)
@@ -189,6 +192,68 @@ IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
 WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
 ------------------------------------------------------------------------------
+libjpeg 9a / Independent JPEG Group (in tesseract.js-core)
+------------------------------------------------------------------------------
+
+Copyright (C) 2014, Thomas G. Lane, Guido Vollbeding.
+All Rights Reserved except as specified below.
+
+this software is based in part on the work of the Independent JPEG Group.
+
+Permission is hereby granted to use, copy, modify, and distribute this
+software (or portions thereof) for any purpose, without fee, subject to
+these conditions:
+(1) If any part of the source code for this software is distributed, then this
+README file must be included, with this copyright and no-warranty notice
+unaltered; and any additions, deletions, or changes to the original files
+must be clearly indicated in accompanying documentation.
+(2) If only executable code is distributed, then the accompanying
+documentation must state that "this software is based in part on the work of
+the Independent JPEG Group".
+(3) Permission for use of this software is granted only if the user accepts
+full responsibility for any undesirable consequences; the authors accept
+NO LIABILITY for damages of any kind.
+
+THE AUTHORS MAKE NO WARRANTY OR REPRESENTATION, EITHER EXPRESS OR IMPLIED,
+WITH RESPECT TO THIS SOFTWARE, ITS QUALITY, ACCURACY, MERCHANTABILITY, OR
+FITNESS FOR A PARTICULAR PURPOSE.  THIS SOFTWARE IS PROVIDED "AS IS", AND YOU,
+THE USER, ARE ASSUMING THE ENTIRE RISK AS TO ITS QUALITY AND ACCURACY.
+
+------------------------------------------------------------------------------
+libwebp (in tesseract.js-core)
+------------------------------------------------------------------------------
+
+Copyright (c) 2010, Google Inc. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+  * Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+
+  * Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in
+    the documentation and/or other materials provided with the
+    distribution.
+
+  * Neither the name of Google nor the names of its contributors may
+    be used to endorse or promote products derived from this software
+    without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+------------------------------------------------------------------------------
 regenerator-runtime (in tesseract.min.js, worker.min.js)
 ------------------------------------------------------------------------------
 
@@ -281,35 +346,6 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
-------------------------------------------------------------------------------
-jsPDF 2.5.1 (jspdf.umd.min.js)
-------------------------------------------------------------------------------
-
-MIT License
-
-Copyright (c) 2010-2021 James Hall <james@parall.ax>, https://github.com/MrRio/jsPDF
-              2015-2021 yWorks GmbH
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-Further notices of bundled parts are kept in the @license comments of jspdf.umd.min.js.
 
 ------------------------------------------------------------------------------
 JSZip 3.10.1 (jszip.min.js) – used under the MIT option of its MIT/GPLv3 dual license

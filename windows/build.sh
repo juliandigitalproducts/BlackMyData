@@ -22,7 +22,7 @@ for f in index.html strato_app.js style.css pii_engine.js ocr_utils.js icon.svg;
 tools/version.sh --stamp "$OUT/web/strato_app.js" "$OUT/web/index.html"
 rsync -a --exclude '*.traineddata' --exclude '.DS_Store' app/static/vendor/ "$OUT/web/vendor/"
 rsync -a --exclude '.DS_Store' app/static/licenses/ "$OUT/web/licenses/"   # LICENSE, third-party notices
-cp app/static/licenses/LICENSE.txt app/static/licenses/THIRD_PARTY_NOTICES.txt "$OUT/"
+cp app/static/licenses/LICENSE.txt app/static/licenses/LICENSE-EXCEPTIONS.txt app/static/licenses/THIRD_PARTY_NOTICES.txt "$OUT/"
 cat > "$OUT/LIESMICH.txt" <<TXT
 BlackMyData $VERSION fuer Windows (portable)
 
@@ -38,7 +38,9 @@ Beim ersten Start meldet Windows SmartScreen eventuell "Unbekannter Herausgeber"
 
 Einstellungen: %LOCALAPPDATA%\BlackMyData (beim Loeschen des Ordners ist alles zurueckgesetzt).
 
-Lizenzen: LICENSE.txt (MIT) und THIRD_PARTY_NOTICES.txt; Volltexte auch in web\licenses\.
+Lizenz: GNU GPL v3 oder spaeter (LICENSE.txt) mit Zusatzbedingungen nach Abschnitt 7
+(Marken, LICENSE-EXCEPTIONS.txt); Versionen bis einschliesslich v1.0.7: MIT.
+Fremdkomponenten: THIRD_PARTY_NOTICES.txt; Volltexte auch in web\licenses\.
 TXT
 (cd dist && zip -qr "BlackMyData-Windows-Portable-$VERSION.zip" BlackMyData-Windows-Portable)
 

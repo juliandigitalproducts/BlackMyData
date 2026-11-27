@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Julian Digital Products
+
 // BlackMyData for macOS: a native window around the standalone web app.
 //
 // The web app (Contents/Resources/web) is served from app://localhost by a

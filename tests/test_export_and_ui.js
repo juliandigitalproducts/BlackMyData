@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Julian Digital Products
+
 const fs = require("fs");
 const path = require("path");
 const assert = require("assert");
@@ -37,7 +40,8 @@ function createVmSandbox() {
       getContext: () => ({
         fillStyle: "",
         fillRect: () => {},
-        fillText: () => {}
+        fillText: () => {},
+        drawImage: () => {}
       }),
       toBlob: (cb) => {
         cb({
@@ -310,12 +314,35 @@ function createVmSandbox() {
     console.log("\n--- TEST 9: PDF Metadata Sanitization ---");
     assert(appJsCode.includes('outPdfDoc.setProducer("blackMyData")'), "strato_app.js sets Producer to blackMyData");
     assert(appJsCode.includes('outPdfDoc.setCreator("blackMyData")'), "strato_app.js sets Creator to blackMyData");
-    assert(appJsCode.includes('creator: "blackMyData"'), "strato_app.js sets jsPDF creator to blackMyData");
+    // jsPDF was removed (licence switch to GPL-3.0-or-later): pdf-lib is the only PDF writer, also for image import.
+    assert(!/jspdf/i.test(appJsCode.replace(/\/\/[^\n]*/g, "")), "strato_app.js no longer uses jsPDF");
+    assert(!/jspdf/i.test(html), "index.html no longer loads jsPDF");
+    assert(!fs.readdirSync(path.join(__dirname, "../app/static/vendor")).some((f) => /jspdf/i.test(f)), "no jsPDF vendor file");
+    assert(/async function convertImageFileToPdfBytes[\s\S]*?PDFLib\.PDFDocument\.create\(\)[\s\S]*?embedJpg/.test(appJsCode),
+      "image import builds the PDF with pdf-lib");
     assert(appJsCode.includes("if (srcPdfDoc && srcPdfDoc.isEncrypted)"), "strato_app.js checks isEncrypted and falls back");
     // Version check: a valid version is set.
     const ver = require("./_version.js");
     assert(ver.compare(ver.current, "1.0.0") >= 0, "CURRENT_BUILD_VERSION is 1.0.0 or later");
     console.log("  ✓ PASS: Metadata Producer/Creator set to blackMyData, PII metadata cleared");
+
+    // ----------------------------------------------------------------------------
+    // TEST 10: Image import builds a one-page PDF with pdf-lib (jsPDF removed)
+    // ----------------------------------------------------------------------------
+    console.log("\n--- TEST 10: Image import via pdf-lib ---");
+    const imgSandbox = createVmSandbox();
+    imgSandbox.URL = { createObjectURL: () => "blob:test", revokeObjectURL: () => {} };
+    imgSandbox.Image = class {
+      set src(_v) { this.naturalWidth = 640; this.naturalHeight = 480; setTimeout(() => this.onload(), 0); }
+    };
+    const imgPdfBuf = await imgSandbox.convertImageFileToPdfBytes({ name: "scan.png" });
+    const imgPdf = await PDFDocument.load(Buffer.from(imgPdfBuf), { updateMetadata: false });
+    assert.strictEqual(imgPdf.getPageCount(), 1, "image import yields exactly one page");
+    const { width: iw, height: ih } = imgPdf.getPage(0).getSize();
+    assert.strictEqual(iw, 640, "page width equals image width");
+    assert.strictEqual(ih, 480, "page height equals image height");
+    assert.strictEqual(imgPdf.getProducer(), "blackMyData", "image PDF producer is neutral");
+    console.log("  ✓ PASS: convertImageFileToPdfBytes creates a 640x480 pt one-page PDF with pdf-lib");
 
     console.log("\n============================================================");
     console.log(" 🎉 ALL CODE REVIEW FIXES VERIFIED SUCCESSFULLY!           ");

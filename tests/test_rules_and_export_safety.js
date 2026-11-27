@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Julian Digital Products
+
 // Fixes of the 10 Nov 2026 review : detection rules and the safety paths of the export.
 const fs = require("fs");
 const path = require("path");

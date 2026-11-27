@@ -82,11 +82,12 @@ Section "BlackMyData Core" SecCore
     File "../app/static/icon.svg"
     SetOutPath "$INSTDIR\web\vendor"
     File /r /x "*.traineddata" "../app/static/vendor/*.*"
-    ; License texts (MIT project license, third-party notices, Apache-2.0 full text)
+    ; License texts (GPL-3.0 project license + section 7 terms, third-party notices, Apache-2.0 full text)
     SetOutPath "$INSTDIR\web\licenses"
     File /x ".DS_Store" "../app/static/licenses/*.*"
     SetOutPath "$INSTDIR"
     File "../app/static/licenses/LICENSE.txt"
+    File "../app/static/licenses/LICENSE-EXCEPTIONS.txt"
     File "../app/static/licenses/THIRD_PARTY_NOTICES.txt"
 
     WriteUninstaller "$INSTDIR\Uninstall.exe"
@@ -120,6 +121,7 @@ Section "Uninstall"
     RMDir /r "$INSTDIR\web"
     Delete "$INSTDIR\icon.ico"
     Delete "$INSTDIR\LICENSE.txt"
+    Delete "$INSTDIR\LICENSE-EXCEPTIONS.txt"
     Delete "$INSTDIR\THIRD_PARTY_NOTICES.txt"
     Delete "$INSTDIR\BlackMyData.exe"
     Delete "$INSTDIR\BlackMyData.bat"
